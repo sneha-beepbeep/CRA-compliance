@@ -1,0 +1,102 @@
+[
+  {
+    "innovation_id": "I1",
+    "name": "Deep PackGen",
+    "technique_category": "Deep Reinforcement Learning - adversarial defense",
+    "description": "DRL framework that generates adversarial network packets to test and improve network intrusion detection systems (NIDS) against Adversarial ML attacks.",
+    "quantified_result": "66.4% average adversarial success rate across ML models and attack types; >45% of successful samples were out-of-distribution.",
+    "dual_use_flag": false,
+    "related_risk_ids": ["R4"],
+    "source_chapter": 2,
+    "source_refs": [45, 46]
+  },
+  {
+    "innovation_id": "I2",
+    "name": "RansomAI",
+    "technique_category": "Reinforcement Learning (Deep Q-Learning) - adaptive evasion",
+    "description": "RL-based framework integrable into ransomware to adapt encryption algorithm, rate, and duration to evade detection while maximizing damage. Framed as an 'ethical' adversarial tool for defenders to anticipate real attacks.",
+    "quantified_result": "Evaded Ransomware-PoC detection on a Raspberry Pi 4 testbed with >90% accuracy using Deep Q-Learning + Isolation Forest detection.",
+    "dual_use_flag": true,
+    "dual_use_note": "Explicitly flagged in-text as replicable by real cybercriminals/state actors despite defensive intent.",
+    "related_risk_ids": ["R4", "R7"],
+    "source_chapter": 2,
+    "source_refs": [63]
+  },
+  {
+    "innovation_id": "I3",
+    "name": "CoAtNet-based malware classification",
+    "technique_category": "Deep Learning - malware visualization",
+    "description": "Converts malware binaries into grayscale images, classified via the CoAtNet architecture, improving on classical CNN-based malware image classification.",
+    "quantified_result": null,
+    "dual_use_flag": false,
+    "related_risk_ids": ["R4"],
+    "source_chapter": 2,
+    "source_refs": [55, 56, 57]
+  },
+  {
+    "innovation_id": "I4",
+    "name": "BinImg2Vec",
+    "technique_category": "Self-supervised + supervised learning - malware visualization",
+    "description": "Malware binary image classifier framework combining self-supervised learning (via Data2Vec) with supervised learning; produces embeddings that aid model explainability.",
+    "quantified_result": "4% improvement in classification performance; 0.5% reduction in performance variance across runs, vs. supervised-only baselines.",
+    "dual_use_flag": false,
+    "related_risk_ids": ["R4", "R1"],
+    "source_chapter": 2,
+    "source_refs": [58]
+  },
+  {
+    "innovation_id": "I5",
+    "name": "Multi-node multi-class CPS attack detection",
+    "technique_category": "ML classification - distributed systems",
+    "description": "Algorithm for early detection of cyber-attacks on distributed cyber-physical systems (CPS) via multi-node, multi-class classification.",
+    "quantified_result": null,
+    "dual_use_flag": false,
+    "related_risk_ids": ["R4"],
+    "source_chapter": 2,
+    "source_refs": [59]
+  },
+  {
+    "innovation_id": "I6",
+    "name": "Artificial Immune System IDS (AIS-IDS)",
+    "technique_category": "Bio-inspired computing - intrusion detection",
+    "description": "Intrusion detection system design inspired by the human immune system, using Self/Nonself and Danger Theory concepts.",
+    "quantified_result": null,
+    "dual_use_flag": false,
+    "related_risk_ids": ["R4"],
+    "source_chapter": 2,
+    "source_refs": [60]
+  },
+  {
+    "innovation_id": "I7",
+    "name": "AI-assisted authentication",
+    "technique_category": "Applied ML - authentication",
+    "description": "AI techniques (e.g. facial recognition, keystroke dynamics) applied across authentication scenarios, from building access to smartphone unlock.",
+    "quantified_result": null,
+    "dual_use_flag": false,
+    "related_risk_ids": ["R6"],
+    "source_chapter": 2,
+    "source_refs": [61]
+  },
+  {
+    "innovation_id": "I8",
+    "name": "Active Learning for cybersecurity data labeling",
+    "technique_category": "Active Learning - data preparation",
+    "description": "Interactive learning method that queries human analysts on high-uncertainty cases to reduce labeling cost and address imbalanced-data problems in cybersecurity ML.",
+    "quantified_result": null,
+    "dual_use_flag": false,
+    "related_risk_ids": ["R2", "R8"],
+    "source_chapter": 2,
+    "source_refs": [53]
+  },
+  {
+    "innovation_id": "I9",
+    "name": "Avast-CTU Public CAPE Dataset",
+    "technique_category": "Open dataset - malware detection",
+    "description": "Open-source labeled dataset (Avast Software + Czech Technical University AI Center) supporting new ML methods for generic malicious-behavior detection.",
+    "quantified_result": null,
+    "dual_use_flag": false,
+    "related_risk_ids": ["R8"],
+    "source_chapter": 2,
+    "source_refs": [54]
+  }
+]

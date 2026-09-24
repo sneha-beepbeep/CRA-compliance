@@ -1,0 +1,6 @@
+[
+  {"barrier_id":"B1","description":"Academia develops specialized algorithms on old datasets that perform well in testing but fail operationally as threats evolve; industry has abundant data but relies on old algorithms not trained on new threats.","source_refs":[2]},
+  {"barrier_id":"B2","description":"Academic performance analysis is mostly single-dataset, weakening real-world validity; adversarial ML is unconstrained by the ethics and data-privacy regulations that bind defensive algorithms, giving attackers an edge.","source_refs":[2]},
+  {"barrier_id":"B3","description":"Defense algorithms are highly specialized, rarely reused, and lack transparency/interoperability, wasting effort; adversarial algorithms, by contrast, are commonly shared (for a price), giving attackers a cumulative advantage.","source_refs":[2]},
+  {"barrier_id":"B4","description":"AI cybersecurity solutions remain costly and largely unaffordable for small and medium-sized organizations, even with subsidies -- leaving them relatively exposed to AI-driven attacks at scale. Directly relevant to regtech SMEs, the tool's target audience.","source_refs":[2]}
+]

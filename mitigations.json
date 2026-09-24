@@ -1,0 +1,221 @@
+[
+  {
+    "mitigation_id": "M1",
+    "name": "XAI-driven transparency mitigation",
+    "maturity_level": "current",
+    "related_risk_ids": [
+      "R1"
+    ],
+    "mitigation_status": "on track",
+    "contingency_status": "not required",
+    "comments": "Significant breakthroughs in eXplainable AI (XAI) for cybersecurity are expected to fix the root causes of this risk.",
+    "source_chapter": 11,
+    "source_refs": []
+  },
+  {
+    "mitigation_id": "M2",
+    "name": "Holistic human-AI advisory approach",
+    "maturity_level": "current",
+    "related_risk_ids": [
+      "R2"
+    ],
+    "mitigation_status": "on track",
+    "contingency_status": "not required",
+    "comments": "AI systems positioned as advisories to human experts rather than autonomous decision-makers.",
+    "source_chapter": 11,
+    "source_refs": []
+  },
+  {
+    "mitigation_id": "M3",
+    "name": "Bias-correction R&D for AI systems",
+    "maturity_level": "current",
+    "related_risk_ids": [
+      "R3"
+    ],
+    "mitigation_status": "poor",
+    "contingency_status": "poor",
+    "comments": "R&D efforts in progress but not yet producing satisfactory results.",
+    "source_chapter": 11,
+    "source_refs": []
+  },
+  {
+    "mitigation_id": "M4",
+    "name": "Adversarial ML defense R&D",
+    "maturity_level": "current",
+    "related_risk_ids": [
+      "R4"
+    ],
+    "mitigation_status": "poor",
+    "contingency_status": "not applicable",
+    "comments": "No reliable short-term resolution; several R&D efforts promise improvement in the middle-to-long run only.",
+    "source_chapter": 11,
+    "source_refs": []
+  },
+  {
+    "mitigation_id": "M5",
+    "name": "Safety, legislation, and ethics frameworks + holistic approach",
+    "maturity_level": "current",
+    "related_risk_ids": [
+      "R5"
+    ],
+    "mitigation_status": "on track",
+    "contingency_status": "not required",
+    "comments": "Cumulative efforts on safety/security/legislation/ethics frameworks, combined with keeping AI in an advisory role, are on the right track.",
+    "source_chapter": 11,
+    "source_refs": []
+  },
+  {
+    "mitigation_id": "M6",
+    "name": "Privacy-centric AI training frameworks",
+    "maturity_level": "current",
+    "related_risk_ids": [
+      "R6"
+    ],
+    "mitigation_status": "poor",
+    "contingency_status": "poor",
+    "comments": "Promising R&D exists but is in early stages; benefits expected only in the middle-to-long run.",
+    "source_chapter": 11,
+    "source_refs": []
+  },
+  {
+    "mitigation_id": "M7",
+    "name": "AI-cybercrime legislation",
+    "maturity_level": "current",
+    "related_risk_ids": [
+      "R7"
+    ],
+    "mitigation_status": "in progress, less than sufficient",
+    "contingency_status": "poor",
+    "comments": "Rigorous legislation is being developed but lacks systematic application precedent. Note: 'misuse' in military/cyberwarfare/state-backed contexts is likely to remain an authorized, if controlled, use case.",
+    "source_chapter": 11,
+    "source_refs": []
+  },
+  {
+    "mitigation_id": "M8",
+    "name": "XAI-based threat-coverage assessment",
+    "maturity_level": "current",
+    "related_risk_ids": [
+      "R8"
+    ],
+    "mitigation_status": "in progress, less than sufficient",
+    "contingency_status": "poor",
+    "comments": "XAI breakthroughs promise better threat-coverage assessment; rehearsal-vs-actual-attack-condition assessment remains untackled.",
+    "source_chapter": 11,
+    "source_refs": []
+  },
+  {
+    "mitigation_id": "M9",
+    "name": "Pre-emptive AI-driven cyber-defense system",
+    "maturity_level": "forecast_optimistic",
+    "related_risk_ids": [
+      "R4"
+    ],
+    "comments": "High-level architecture/conceptual framework for a preventative AI-driven cyber-defense system with real-time intelligence and dynamic risk analytics.",
+    "source_chapter": 11,
+    "source_refs": [
+      2
+    ]
+  },
+  {
+    "mitigation_id": "M10",
+    "name": "Hybrid Augmented Intelligence (human-AI collaboration)",
+    "maturity_level": "forecast_optimistic",
+    "related_risk_ids": [
+      "R2",
+      "R5"
+    ],
+    "comments": "AI-powered cognitive technologies as an essential but human-guided part of the operational process.",
+    "source_chapter": 11,
+    "source_refs": [
+      3,
+      21
+    ]
+  },
+  {
+    "mitigation_id": "M11",
+    "name": "Quantitative modeling of AI's patch-deployment impact",
+    "maturity_level": "forecast_optimistic",
+    "related_risk_ids": [
+      "R2"
+    ],
+    "comments": "Modeling shows more opportunity for automated/accelerated patch deployment than for automated patch development.",
+    "source_chapter": 11,
+    "source_refs": [
+      4
+    ]
+  },
+  {
+    "mitigation_id": "M12",
+    "name": "AI + quantum computing synergy for cyber-defense",
+    "maturity_level": "forecast_optimistic",
+    "related_risk_ids": [
+      "R4"
+    ],
+    "comments": "Promises exponential advantage for certain cybersecurity problem classes, but is also forecast to pose unexpected new threats. Does not map to a Chapter 1 risk category -- flagged as a possible emerging/unmapped risk pending later chapters. (Folded under R4 -- Vulnerability to attacks -- pending clearer categorization in later chapters.)",
+    "source_chapter": 11,
+    "source_refs": [
+      5
+    ]
+  },
+  {
+    "mitigation_id": "M13",
+    "name": "XAI as a standard ML-pipeline component",
+    "maturity_level": "forecast_optimistic",
+    "related_risk_ids": [
+      "R1",
+      "R8"
+    ],
+    "comments": "XAI becomes a must-have part of cybersecurity AI ML pipelines.",
+    "source_chapter": 11,
+    "source_refs": [
+      21
+    ]
+  },
+  {
+    "mitigation_id": "M14",
+    "name": "Global legal and AI-ethics framework consensus",
+    "maturity_level": "forecast_optimistic",
+    "related_risk_ids": [
+      "R5",
+      "R7"
+    ],
+    "comments": "Major global/regional/national stakeholders agree on legal and AI-ethical frameworks for sustainable cybersecurity AI.",
+    "source_chapter": 11,
+    "source_refs": [
+      50
+    ]
+  },
+  {
+    "mitigation_id": "M15",
+    "name": "AI risk management + security-by-design frameworks",
+    "maturity_level": "forecast_optimistic",
+    "related_risk_ids": [
+      "R5"
+    ],
+    "comments": "AI risk management frameworks (see Appendix B) and product security/safety guidelines embedded from the start of AI system development.",
+    "source_chapter": 11,
+    "source_refs": []
+  },
+  {
+    "mitigation_id": "M16",
+    "name": "Arms control over military/cyberwarfare AI use",
+    "maturity_level": "forecast_optimistic",
+    "related_risk_ids": [
+      "R7"
+    ],
+    "comments": "Proper establishment of arms control over AI in military and cyberwarfare use cases.",
+    "source_chapter": 11,
+    "source_refs": []
+  },
+  {
+    "mitigation_id": "M17",
+    "name": "Increased industry-academia AI lab synergy",
+    "maturity_level": "forecast_optimistic",
+    "related_risk_ids": [
+      "R8"
+    ],
+    "comments": "More synergy between leading AI labs in business and academia to address critical cybersecurity AI risks over the next 2-3 years.",
+    "source_chapter": 11,
+    "source_refs": []
+  }
+]

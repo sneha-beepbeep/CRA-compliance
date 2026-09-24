@@ -1,0 +1,66 @@
+[
+  {
+    "risk_id": "R1",
+    "name": "Lack of transparency and explainability",
+    "description": "AI systems can be difficult to understand and interpret, making it challenging to understand how and why decisions are being made. Can lead to mistrust, errors, or legal issues.",
+    "category": "Governance",
+    "source_chapter": 1,
+    "source_refs": [1, 2, 3]
+  },
+  {
+    "risk_id": "R2",
+    "name": "Overreliance on AI",
+    "description": "AI systems are not infallible and may have limitations or flaws. Overreliance could result in complacency, reduced human skills, or missed threats.",
+    "category": "Operational",
+    "source_chapter": 1,
+    "source_refs": [1, 2, 3]
+  },
+  {
+    "risk_id": "R3",
+    "name": "Bias and discrimination",
+    "description": "AI systems may reflect or amplify biases of their data, algorithms, or developers, producing unfair or inaccurate outcomes for certain groups.",
+    "category": "Governance",
+    "source_chapter": 1,
+    "source_refs": [1, 2, 3]
+  },
+  {
+    "risk_id": "R4",
+    "name": "Vulnerability to attacks",
+    "description": "AI systems may be targeted by malicious actors seeking to compromise, manipulate, or sabotage them via Adversarial ML attacks, potentially causing data breaches, misinformation, or system damage.",
+    "category": "Technical",
+    "source_chapter": 1,
+    "source_refs": [1, 2, 3]
+  },
+  {
+    "risk_id": "R5",
+    "name": "Lack of human oversight",
+    "description": "AI systems may operate autonomously or with minimal human intervention, risking ethical, legal, or social issues if the system does not align with human values, norms, or regulations.",
+    "category": "Governance",
+    "source_chapter": 1,
+    "source_refs": [1, 2, 3]
+  },
+  {
+    "risk_id": "R6",
+    "name": "Privacy concerns",
+    "description": "AI systems may collect and process vast amounts of sensitive or personal data, risking mishandling through intentional breaches or accidental leaks.",
+    "category": "Privacy",
+    "source_chapter": 1,
+    "source_refs": [1, 2, 3]
+  },
+  {
+    "risk_id": "R7",
+    "name": "Misuse of artificial intelligence",
+    "description": "AI systems may be used for malicious purposes by adversaries exploiting target-system vulnerabilities -- cyberattacks, cyberespionage, sabotage, or cyberwarfare.",
+    "category": "Technical",
+    "source_chapter": 1,
+    "source_refs": [1, 2, 3]
+  },
+  {
+    "risk_id": "R8",
+    "name": "Assessment difficulties",
+    "description": "Difficulty in assessing AI system effectiveness and ensuring correct behavior, in terms of both threat coverage and rehearsal vs. actual attack conditions.",
+    "category": "Operational",
+    "source_chapter": 1,
+    "source_refs": [1, 2, 3]
+  }
+]

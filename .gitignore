@@ -1,0 +1,4 @@
+.DS_Store
+.claude/settings.local.json
+# DB Browser for SQLite project files (local UI state)
+*.sqbpro

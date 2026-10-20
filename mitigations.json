@@ -151,7 +151,8 @@
     "related_risk_ids": [
       "R4"
     ],
-    "comments": "Promises exponential advantage for certain cybersecurity problem classes, but is also forecast to pose unexpected new threats. Does not map to a Chapter 1 risk category -- flagged as a possible emerging/unmapped risk pending later chapters. (Folded under R4 -- Vulnerability to attacks -- pending clearer categorization in later chapters.)",
+    "comments": "Promises exponential advantage for certain cybersecurity problem classes, but is also forecast to pose unexpected new threats. Does not map to a Chapter 1 risk category -- flagged as a possible emerging/unmapped risk pending later chapters.",
+    "link_comment": "AI+quantum synergy folded under Vulnerability to attacks pending later-chapter clarification.",
     "source_chapter": 11,
     "source_refs": [
       5

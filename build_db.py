@@ -49,6 +49,7 @@ conn.commit()
 risk_id  = dict(conn.execute("SELECT risk_code, id FROM risk"))
 innov_id = dict(conn.execute("SELECT innovation_code, id FROM innovation"))
 mit_id   = dict(conn.execute("SELECT mitigation_code, id FROM mitigation"))
+bar_id   = dict(conn.execute("SELECT barrier_code, id FROM mitigation_barrier"))
 
 for i in innovations:
     for rcode in i.get("related_risk_ids", []):
@@ -59,7 +60,7 @@ for m in mitigations:
     for rcode in m.get("related_risk_ids", []):
         conn.execute("""INSERT OR IGNORE INTO risk_mitigation
             (risk_id, mitigation_id, mitigation_status, contingency_status, comments) VALUES (?,?,?,?,?)""",
-            (risk_id[rcode], mit_id[m["mitigation_id"]], m.get("mitigation_status"), m.get("contingency_status"), m.get("comments")))
+            (risk_id[rcode], mit_id[m["mitigation_id"]], m.get("mitigation_status"), m.get("contingency_status"), m.get("link_comment", m.get("comments"))))
 
 conn.commit()
 
@@ -81,6 +82,9 @@ for i in innovations:
 for m in mitigations:
     for ref in m.get("source_refs", []):
         conn.execute("INSERT OR IGNORE INTO mitigation_source (mitigation_id, source_id) VALUES (?,?)", (mit_id[m["mitigation_id"]], src_id[ref]))
+for b in barriers:
+    for ref in b.get("source_refs", []):
+        conn.execute("INSERT OR IGNORE INTO mitigation_barrier_source (barrier_id, source_id) VALUES (?,?)", (bar_id[b["barrier_id"]], src_id[ref]))
 
 conn.commit()
 

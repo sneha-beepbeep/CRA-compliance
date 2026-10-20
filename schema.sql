@@ -72,6 +72,43 @@ CREATE TABLE source (
     url         TEXT
 );
 
+-- ---------- Security findings (Provably Secure changelog) ----------
+-- One row per vulnerability found in our own hardened database, from any
+-- channel. Timestamps are ISO 8601 UTC, e.g. '2026-10-20T14:05:00Z'.
+-- 'description' is internal triage detail and is never published;
+-- 'public_summary' is the only free text that reaches security_changelog.
+
+CREATE TABLE finding (
+    id                      INTEGER PRIMARY KEY,
+    finding_code            TEXT UNIQUE NOT NULL,  -- e.g. 'F1'
+    title                   TEXT NOT NULL,
+    description             TEXT,                  -- internal only
+    public_summary          TEXT,                  -- required before disclosure
+    affected_component      TEXT,
+    cvss_version            TEXT CHECK (cvss_version IN ('3.1','4.0')),
+    cvss_vector             TEXT,
+    cvss_score              REAL CHECK (cvss_score BETWEEN 0 AND 10),
+    discovery_channel       TEXT NOT NULL CHECK (discovery_channel IN
+                                ('internal','private_pentest','invite_only_bounty','public_bounty','external_report')),
+    actively_exploited      INTEGER NOT NULL DEFAULT 0 CHECK (actively_exploited IN (0,1)),  -- 1 triggers CRA Art. 14 reporting
+    status                  TEXT NOT NULL CHECK (status IN
+                                ('reported','triaged','fixing','fixed','disclosed','rejected','duplicate')),
+    risk_id                 INTEGER REFERENCES risk(id),  -- optional link back to the matrix's risk taxonomy
+    reported_at             TEXT NOT NULL,         -- when we became aware: starts the CRA clock
+    triaged_at              TEXT,
+    fix_available_at        TEXT,                  -- corrective/mitigating measure available: starts the 14-day final-report clock
+    disclosed_at            TEXT,
+    cra_early_warning_at    TEXT,                  -- due within 24h of reported_at
+    cra_notification_at     TEXT,                  -- due within 72h of reported_at
+    cra_final_report_at     TEXT,                  -- due within 14 days of fix_available_at
+    CHECK (triaged_at       IS NULL OR julianday(triaged_at)       >= julianday(reported_at)),
+    CHECK (fix_available_at IS NULL OR julianday(fix_available_at) >= julianday(reported_at)),
+    CHECK (disclosed_at     IS NULL OR julianday(disclosed_at)     >= julianday(reported_at)),
+    CHECK (disclosed_at IS NULL OR public_summary IS NOT NULL),
+    CHECK (status <> 'disclosed' OR disclosed_at IS NOT NULL),
+    CHECK (status NOT IN ('fixed','disclosed') OR fix_available_at IS NOT NULL)
+);
+
 -- ---------- Junction tables (many-to-many) ----------
 
 CREATE TABLE risk_innovation (
@@ -154,3 +191,73 @@ SELECT
 FROM risk r
 LEFT JOIN risk_innovation ri ON ri.risk_id = r.id
 LEFT JOIN innovation i ON i.id = ri.innovation_id;
+
+-- ---------- Read-side views for the security changelog ----------
+
+-- Public changelog: disclosed findings only, public fields only.
+-- Severity uses the CVSS qualitative rating scale (same bands in 3.1 and 4.0).
+CREATE VIEW security_changelog AS
+SELECT
+    f.finding_code,
+    f.disclosed_at,
+    CASE
+        WHEN f.cvss_score IS NULL THEN NULL
+        WHEN f.cvss_score = 0     THEN 'none'
+        WHEN f.cvss_score < 4     THEN 'low'
+        WHEN f.cvss_score < 7     THEN 'medium'
+        WHEN f.cvss_score < 9     THEN 'high'
+        ELSE 'critical'
+    END                     AS severity,
+    f.cvss_version,
+    f.cvss_score,
+    f.cvss_vector,
+    f.affected_component,
+    f.public_summary,
+    f.discovery_channel,
+    f.reported_at,
+    f.fix_available_at,
+    ROUND(julianday(f.fix_available_at) - julianday(f.reported_at), 1) AS days_to_fix
+FROM finding f
+WHERE f.disclosed_at IS NOT NULL
+ORDER BY f.disclosed_at DESC;
+
+-- CRA Art. 14 deadline tracking for actively exploited vulnerabilities.
+-- Each *_state is 'met', 'late', 'open' (due, not yet passed), 'overdue',
+-- or 'not started' (final report only: no fix available yet).
+CREATE VIEW cra_deadline_check AS
+WITH d AS (
+    SELECT
+        finding_code,
+        status,
+        reported_at,
+        cra_early_warning_at,
+        strftime('%Y-%m-%dT%H:%M:%SZ', reported_at, '+24 hours') AS early_warning_due,
+        cra_notification_at,
+        strftime('%Y-%m-%dT%H:%M:%SZ', reported_at, '+72 hours') AS notification_due,
+        cra_final_report_at,
+        strftime('%Y-%m-%dT%H:%M:%SZ', fix_available_at, '+14 days') AS final_report_due
+    FROM finding
+    WHERE actively_exploited = 1
+)
+SELECT
+    d.*,
+    CASE
+        WHEN cra_early_warning_at IS NOT NULL THEN
+            CASE WHEN julianday(cra_early_warning_at) <= julianday(early_warning_due) THEN 'met' ELSE 'late' END
+        WHEN julianday('now') > julianday(early_warning_due) THEN 'overdue'
+        ELSE 'open'
+    END AS early_warning_state,
+    CASE
+        WHEN cra_notification_at IS NOT NULL THEN
+            CASE WHEN julianday(cra_notification_at) <= julianday(notification_due) THEN 'met' ELSE 'late' END
+        WHEN julianday('now') > julianday(notification_due) THEN 'overdue'
+        ELSE 'open'
+    END AS notification_state,
+    CASE
+        WHEN final_report_due IS NULL THEN 'not started'
+        WHEN cra_final_report_at IS NOT NULL THEN
+            CASE WHEN julianday(cra_final_report_at) <= julianday(final_report_due) THEN 'met' ELSE 'late' END
+        WHEN julianday('now') > julianday(final_report_due) THEN 'overdue'
+        ELSE 'open'
+    END AS final_report_state
+FROM d;

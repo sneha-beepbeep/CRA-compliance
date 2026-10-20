@@ -1,7 +1,7 @@
 """
-Rebuilds regtech_cyber.db from scratch using schema.sql plus the four
+Rebuilds regtech_cyber.db from scratch using schema.sql plus the five
 source JSON files (risks.json, innovations.json, mitigations.json,
-barriers.json). Safe to re-run any time one of those files changes --
+barriers.json, findings.json). Safe to re-run any time one of those files changes --
 it deletes any existing regtech_cyber.db first and recreates it clean.
 
 Usage:
@@ -22,6 +22,7 @@ risks = json.load(open(os.path.join(HERE, "risks.json")))
 innovations = json.load(open(os.path.join(HERE, "innovations.json")))
 mitigations = json.load(open(os.path.join(HERE, "mitigations.json")))
 barriers = json.load(open(os.path.join(HERE, "barriers.json")))
+findings = json.load(open(os.path.join(HERE, "findings.json")))
 
 for r in risks:
     conn.execute("INSERT INTO risk (risk_code, name, description, category, source_chapter) VALUES (?,?,?,?,?)",
@@ -88,8 +89,21 @@ for b in barriers:
 
 conn.commit()
 
+FINDING_COLS = ["title", "description", "public_summary", "affected_component", "cvss_version", "cvss_vector",
+    "cvss_score", "discovery_channel", "status", "reported_at", "triaged_at", "fix_available_at", "disclosed_at",
+    "cra_early_warning_at", "cra_notification_at", "cra_final_report_at"]
+for f in findings:
+    conn.execute(f"""INSERT INTO finding
+        (finding_code, actively_exploited, risk_id, {", ".join(FINDING_COLS)})
+        VALUES (?,?,?,{",".join("?" * len(FINDING_COLS))})""",
+        (f["finding_id"], 1 if f.get("actively_exploited") else 0,
+         risk_id[f["related_risk_id"]] if f.get("related_risk_id") else None,
+         *[f.get(c) for c in FINDING_COLS]))
+
+conn.commit()
+
 print("Rebuilt regtech_cyber.db")
-for t in ["risk","innovation","mitigation","mitigation_barrier","regulation","sector","source"]:
+for t in ["risk","innovation","mitigation","mitigation_barrier","regulation","sector","source","finding"]:
     n = conn.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0]
     print(f"  {t:22s} {n} rows")
 

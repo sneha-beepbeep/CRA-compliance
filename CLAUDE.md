@@ -20,20 +20,24 @@ You are the **orchestrator** for a simulated software product team. The user is 
 
 ## Current status
 
-- **Stage:** 6, `/build` (loop-back from `/test`): the defect fixes, time-zone option D and the Docker image fix are done and committed and pushed to `origin/pipeline-setup` on 2026-10-21. `/test` is re-running.
-- **Last artifact:**
-  - **Defect fixes:** QA-01 to QA-08, QA-11 and QA-12 fixed. QA-09 partly: the audit-chain check isn't scheduled yet and its records aren't stored outside the database. QA-10 apart from the fact that CI has never run.
-  - **Option D:** the time-zone step is removed (setup counts 5 required steps); a one-time banner confirms the time zone from the browser; new users default to UTC.
-  - **Docker:** `.dockerignore` is now an allowlist (build context 439 KiB instead of 811 MiB); `infra/Dockerfile` is multi-stage, with base images pinned by digest, a non-root user and no dev dependencies.
-  - **Tests on Postgres 16.2:** 664 passed, 0 failed, 1 skipped as owner, including browser tests; 630 passed, 0 failed through the non-superuser role.
-  - **Never actually run:** a real `docker build` (no Docker daemon) and CI.
-- **CPO approval pending on:**
-  - deviations 22–23 (customers get no time-zone banner until phase 1b; UTC display until confirmed);
-  - deviations 24–27 come with the CPO's pre-approval of the Docker proposal;
-  - decided: `/static/` will be served by a Cloudflare proxy rule, not WhiteNoise;
-  - carried over: keep 15 Nov or move it if staging access is late.
-
-  Still needed: catalog content by 2026-10-30; licence checks by 2026-11-13; infrastructure access (GitHub Actions, EU Keycloak and Postgres).
+- **Stage:** 7, `/test` revision 2, filed 2026-10-21 (commit `7407241` re-tested). Verdict: **conditional ship for the 15 Nov drills-only start**. Nothing in the application blocks it; the outstanding conditions are infrastructure and content. Next: a short `/build` pass (the static-file hostname configuration, plus QA-13 and QA-14 if the CPO wants them now), or `/ship` once the conditions are met.
+- **Last artifact:** `docs/test-report.md` revision 2, with the first run kept as history.
+  - **Tests:** 664 passed, 1 skipped as owner; 630 passed through the non-superuser role; 35 browser tests run; about 190 of QA's own checks pass, plus the 1 expected failure (the open part of QA-09); axe 0 violations across 64 page loads.
+  - **First-run defects:** QA-01 to QA-12 fixed (QA-09 partly).
+  - **Option D and the earlier checks:** all pass.
+  - **New Low defects:**
+    - QA-13: the operator commands fail safe under the app's login role, but nothing documents that they need owner credentials;
+    - QA-14: the sign-in policy can update `last_login` for active users in every tenant (that column only).
+- **CPO approval pending on:** (1) accept the conditional ship; (2) deviations 22–23 (QA has no objection); (3) fix QA-13 and QA-14 now or accept them until the pentest.
+  - **Conditions for 15 Nov:**
+    - Keycloak with MFA proven in EU staging (`amr` claim);
+    - CI green;
+    - Docker image built and running in staging (QA recommends a CI `docker build` job);
+    - catalog content by 2026-10-30;
+    - operator runbook covering user provisioning, owner credentials and chain-check scheduling;
+    - C6 clause signed;
+    - licences by 2026-11-13.
+  - **Static files:** Cloudflare serves static files only (decided). They need a separate hostname and a CSP update (see the decision log).
 - **Pre-pipeline context (for `/ceo-review` and `/kickoff`):** this repo joined the pipeline mid-flight on 2026-10-20. It already holds a SQLite knowledge base of AI risks, innovations, mitigations and barriers extracted from Chapters 1, 2 and 11 of the source book (`schema.sql`, `*.json`, `build_db.py` → `regtech_cyber.db`). The CPO confirmed this repo is the "Provably Secure" / Continuous Hardening as a Service product: the existing database is intended to become the hardened flagship case study. `docs/cpo-draft-prd.md` is the CPO's own pre-pipeline pitch, reformatted. It is **input** to `/kickoff` and `/prd`, not an approved artifact. The open challenge for the CEO is whether hardening a database of public reference content proves anything to buyers. *(Superseded 2026-10-21. See the decision log: the CPO reversed the "hardened flagship case study" premise during `/ceo-review`.)*
 - **Decision log:**
   - 2026-10-20 — **Pre-pipeline build (CPO decision, ahead of the gates):** added the `finding` table plus the `security_changelog` and `cra_deadline_check` views to `schema.sql`, fed from `findings.json` (empty). Built before `/prd`, `/design` and `/plan` at the CPO's explicit request. Later stages should treat it as an existing component to confirm or revise, not as approved scope. Assumption to confirm in `/prd`: CRA Art. 14 applies to manufacturers of products with digital elements; whether a hosted database service falls under the CRA, NIS2 or both is unresolved.
@@ -110,7 +114,8 @@ You are the **orchestrator** for a simulated software product team. The user is 
   - 2026-10-21 — **`/test` → loop back to `/build`.** QA verdict: no-ship today; a conditional ship for the 15 Nov drills-only start (1 Critical, 3 Medium, 8 Low defects). The CPO chose to loop back to `/build` to fix them. Asked to "remove the pre-pipeline build from this branch", the CPO confirmed that nothing more needs removing. The files were already cleaned in `/build`, and git history stays as the record. The Postgres `cra_deadline_check` view in the tracker stays.
   - 2026-10-21 — **Defect-fix review:** the CPO approved deviations 14–21 and chose time-zone option D: the "Confirm your time zone" setup step is removed, the time zone is detected from the browser with a one-time confirmation banner, and the required setup count becomes 5. The CPO asked for a Docker image proposal (build context including `.playwright/`, image hygiene) to review before anything is implemented.
   - 2026-10-21 — **Docker image:** the CPO pre-approved the Engineer's recommended option (an allowlist `.dockerignore` and a multi-stage, digest-pinned, non-root Dockerfile) and asked for a commit. It brings runtime deviations 24–27: gunicorn starts directly from the image's own environment, `--worker-tmp-dir /dev/shm`, `/app` is read-only, and the dev seed code isn't in the image.
-  - 2026-10-21 — **Static files:** the CPO chose to have the hosting platform's proxy serve `/static/` in production, using **Cloudflare**, not WhiteNoise. No app change is needed; staging needs the proxy rule. Open point: whether Cloudflare proxies only static files or all traffic. Full proxying terminates TLS at a US-headquartered provider, which needs checking against C3 (EU-headquartered hosting) and the bank's supplier-risk review.
+  - 2026-10-21 — **Static files:** the CPO chose to have the hosting platform's proxy serve `/static/` in production, using **Cloudflare**, not WhiteNoise. No app change is needed; staging needs the proxy rule. **Decided the same day:** Cloudflare proxies **only static files** (CSS, JS, images), never app traffic. The app, its TLS and all incident data stay on the EU-headquartered platform, in line with C3. Follow-up for staging: serve static files from a separate hostname behind Cloudflare, and point the app's `STATIC_URL` and the CSP `script-src`/`style-src` at that origin. This is a small configuration change for the Engineer.
+  - 2026-10-21 — **`/test` revision 2: conditional ship for 15 Nov.** All first-run defects are fixed (QA-09 partly) and no new Medium-or-higher defects were found; 2 new Low (QA-13, QA-14). QA noted that, with today's CSP (`script-src 'self'`), static files on a different hostname are blocked unless the CSP and `STATIC_URL` are updated. That is the configuration change already recorded for the CPO's static-only Cloudflare decision.
 
 ## Rules for the orchestrator
 

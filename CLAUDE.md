@@ -20,7 +20,7 @@ You are the **orchestrator** for a simulated software product team. The user is 
 
 ## Current status
 
-- **Stage:** 6, `/build` (loop-back from `/test`): the defect fixes, time-zone option D and the Docker image fix are done and committed on 2026-10-21. The commit is local and not pushed. Next: `/test` again.
+- **Stage:** 6, `/build` (loop-back from `/test`): the defect fixes, time-zone option D and the Docker image fix are done and committed and pushed to `origin/pipeline-setup` on 2026-10-21. `/test` is re-running.
 - **Last artifact:**
   - **Defect fixes:** QA-01 to QA-08, QA-11 and QA-12 fixed. QA-09 partly: the audit-chain check isn't scheduled yet and its records aren't stored outside the database. QA-10 apart from the fact that CI has never run.
   - **Option D:** the time-zone step is removed (setup counts 5 required steps); a one-time banner confirms the time zone from the browser; new users default to UTC.
@@ -30,7 +30,7 @@ You are the **orchestrator** for a simulated software product team. The user is 
 - **CPO approval pending on:**
   - deviations 22–23 (customers get no time-zone banner until phase 1b; UTC display until confirmed);
   - deviations 24–27 come with the CPO's pre-approval of the Docker proposal;
-  - **new decision before staging:** nothing serves `/static/` in production (WhiteNoise or a proxy/CDN rule);
+  - decided: `/static/` will be served by a Cloudflare proxy rule, not WhiteNoise;
   - carried over: keep 15 Nov or move it if staging access is late.
 
   Still needed: catalog content by 2026-10-30; licence checks by 2026-11-13; infrastructure access (GitHub Actions, EU Keycloak and Postgres).
@@ -110,6 +110,7 @@ You are the **orchestrator** for a simulated software product team. The user is 
   - 2026-10-21 — **`/test` → loop back to `/build`.** QA verdict: no-ship today; a conditional ship for the 15 Nov drills-only start (1 Critical, 3 Medium, 8 Low defects). The CPO chose to loop back to `/build` to fix them. Asked to "remove the pre-pipeline build from this branch", the CPO confirmed that nothing more needs removing. The files were already cleaned in `/build`, and git history stays as the record. The Postgres `cra_deadline_check` view in the tracker stays.
   - 2026-10-21 — **Defect-fix review:** the CPO approved deviations 14–21 and chose time-zone option D: the "Confirm your time zone" setup step is removed, the time zone is detected from the browser with a one-time confirmation banner, and the required setup count becomes 5. The CPO asked for a Docker image proposal (build context including `.playwright/`, image hygiene) to review before anything is implemented.
   - 2026-10-21 — **Docker image:** the CPO pre-approved the Engineer's recommended option (an allowlist `.dockerignore` and a multi-stage, digest-pinned, non-root Dockerfile) and asked for a commit. It brings runtime deviations 24–27: gunicorn starts directly from the image's own environment, `--worker-tmp-dir /dev/shm`, `/app` is read-only, and the dev seed code isn't in the image.
+  - 2026-10-21 — **Static files:** the CPO chose to have the hosting platform's proxy serve `/static/` in production, using **Cloudflare**, not WhiteNoise. No app change is needed; staging needs the proxy rule. Open point: whether Cloudflare proxies only static files or all traffic. Full proxying terminates TLS at a US-headquartered provider, which needs checking against C3 (EU-headquartered hosting) and the bank's supplier-risk review.
 
 ## Rules for the orchestrator
 

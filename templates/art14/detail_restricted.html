@@ -1,0 +1,9 @@
+{% extends "base.html" %}{% load tracker %}
+{% block content %}
+<h1>{% if ev.is_drill %}DRILL {% endif %}{{ ev.ref }} · {{ ev.get_event_type_display }}</h1>
+<p>{{ ev.product.name }} · Status: {{ ev.get_status_display }} · Responder: {{ ev.assigned_responder.display_name }}{% if ev.awaiting_responder %} · <span class="awaiting">AWAITING RESPONDER</span>{% endif %}</p>
+<p class="banner">Details restricted to incident responders.</p>
+{% if ev.last_recalculated_at %}<p class="hint">Deadlines recalculated by a responder at {% local_only ev.last_recalculated_at %}.</p>{% endif %}
+{% include "art14/_clocks_table.html" with full=False %}
+{% if ev.status == "open" %}<p><a href="/events/{{ ev.pk }}/reassign">Reassign responder</a></p>{% endif %}
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Users and roles</h1>
+<p>Only access managers grant or remove the incident responder role.{% if managers %} Access managers: {% for m in managers %}{{ m.display_name }}{% if not forloop.last %}, {% endif %}{% endfor %}.{% endif %}</p>
+<table class="cards">
+  <thead><tr><th scope="col">Name</th><th scope="col">Email</th><th scope="col">Roles</th>{% if can_manage %}<th scope="col">Change</th>{% endif %}</tr></thead>
+  <tbody>
+  {% for u, responder in people %}
+  <tr>
+    <td data-label="Name">{{ u.display_name }}</td>
+    <td data-label="Email">{{ u.email }}</td>
+    <td data-label="Roles">Vendor admin{% if responder %}, incident responder{% endif %}{% if u.is_access_manager %}, access manager{% endif %}</td>
+    {% if can_manage %}<td data-label="Change"><form method="post" action="/setup/users/{{ u.pk }}/responder">{% csrf_token %}<input type="hidden" name="grant" value="{% if responder %}0{% else %}1{% endif %}"><button type="submit">{% if responder %}Remove incident responder role{% else %}Make incident responder{% endif %}</button></form></td>{% endif %}
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+<h2>Customer accounts</h2>
+{% if customers %}<ul>{% for c in customers %}<li>{{ c.tenant.display_name }} · {{ c.email }}</li>{% endfor %}</ul>{% else %}<p>No customer accounts recorded.</p>{% endif %}
+{% endblock %}

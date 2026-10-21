@@ -1,0 +1,34 @@
+# Nothing book-derived may ever ship in an image (IP not cleared; critical-path item 5).
+regtech_cyber.db
+regtech_cyber.sqbpro
+*.sqbpro
+schema.sql
+build_db.py
+risks.json
+innovations.json
+mitigations.json
+barriers.json
+findings.json
+*.ipynb
+cybersecurity-ai-in-2022-2023.ipynb
+
+# Internal planning docs and pipeline scaffolding
+docs/
+.claude/
+CLAUDE.md
+
+# Local environments, databases and caches
+.git/
+.github/
+.venv/
+.venv-bootstrap/
+.uv/
+.localpg/
+.localpg.pw
+staticfiles/
+**/__pycache__/
+**/*.pyc
+.pytest_cache/
+.hypothesis/
+tests/
+scripts/localpg.sh

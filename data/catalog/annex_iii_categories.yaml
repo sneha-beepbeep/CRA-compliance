@@ -1,0 +1,21 @@
+# Annex III categories (R-X1). Only supported categories can be selected; the
+# others are listed but disabled ("not yet supported"). Labels are DRAFT and
+# pending legal review, like the requirement rows.
+kind: categories
+schema_version: 1
+categories:
+  - code: "5(a)"
+    label: "DRAFT – pending legal review"
+    citation: "AI Act Annex III 5(a)"
+    supported: false
+    requirement_sets: []
+  - code: "5(b)"
+    label: "DRAFT – pending legal review"
+    citation: "AI Act Annex III 5(b)"
+    supported: true
+    requirement_sets: [cra_annex_i_part_i, cra_annex_i_part_ii, ai_act_art_15, context_references]
+  - code: "5(c)"
+    label: "DRAFT – pending legal review"
+    citation: "AI Act Annex III 5(c)"
+    supported: false
+    requirement_sets: []

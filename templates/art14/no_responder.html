@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Start an Art. 14 clock</h1>
+<p class="error" role="alert">No incident responder exists. Ask your access manager ({% for m in managers %}{{ m.display_name }}{% if not forloop.last %}, {% endif %}{% empty %}none recorded{% endfor %}) to assign one.</p>
+{% endblock %}

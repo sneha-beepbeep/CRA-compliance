@@ -7,7 +7,7 @@
 
 A planned dashboard for companies whose AI systems score people's creditworthiness. It will show their progress on the security requirements of the EU Cyber Resilience Act (CRA) and the AI Act, track how they handle AI-specific risks, and count down the CRA's reporting deadlines for exploited vulnerabilities and severe incidents.
 
-**Status: in development, specification stage.** Requirements are drafted, but nothing has been built and nothing can be installed or run. A paid pilot with one software vendor and one of its banking clients is being planned.
+**Status: in development, first build stage.** The foundations and the first pilot screens are being built and tested internally. Nothing is deployed and nothing is available to try yet. A paid pilot with one software vendor and one of its banking clients is being planned.
 
 ## Who it's for
 

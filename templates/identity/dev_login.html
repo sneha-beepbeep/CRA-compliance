@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Development sign-in{% endblock %}
+{% block content %}
+<h1>Development sign-in</h1>
+<p class="banner">Development only. This page is not available in production settings.</p>
+{% if error %}<p class="error">No such user.</p>{% endif %}
+<form method="post">{% csrf_token %}
+<label for="email">User</label>
+<select id="email" name="email">{% for u in users %}<option value="{{ u.email }}">{{ u.tenant.display_name }} · {{ u.display_name }} ({{ u.email }})</option>{% endfor %}</select>
+<p><button class="primary" type="submit">Sign in</button></p>
+</form>
+{% endblock %}

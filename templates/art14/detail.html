@@ -1,0 +1,79 @@
+{% extends "base.html" %}{% load tracker %}
+{% block content %}
+{% if ev.is_drill %}<p class="banner drill-banner"><strong>DRILL</strong> · Not released to customers and not counted.</p>{% endif %}
+<h1>{% if ev.is_drill %}DRILL {% endif %}{{ ev.ref }} · {{ ev.get_event_type_display }}</h1>
+<p>{{ ev.product.name }}{% if ev.product_version %} {{ ev.product_version.label }}{% endif %} · Status: {{ ev.get_status_display }} · Responder: {{ ev.assigned_responder.display_name }}{% if ev.started_via == "start_clock" %} · Started by {{ ev.started_by.display_name }}{% endif %}</p>
+{% if ev.awaiting_responder %}<form method="post" action="/events/{{ ev.pk }}/take-over">{% csrf_token %}<p><span class="awaiting">AWAITING RESPONDER</span> <button type="submit">Take over</button></p></form>{% endif %}
+{% if recalculated_recently %}<p class="banner">Deadlines recalculated at {% local_only ev.last_recalculated_at %} after an awareness-time edit.</p>{% endif %}
+{% if ev.status == "open" %}
+<p><a class="button" href="/events/{{ ev.pk }}/awareness">Edit awareness time</a> <a class="button" href="/events/{{ ev.pk }}/details">Edit details</a> <a class="button" href="/events/{{ ev.pk }}/reassign">Reassign responder</a></p>
+{% endif %}
+
+<p>Awareness time: {% dual ev.awareness_at %}{% if ev.awareness_edit_count %} (edited {{ ev.awareness_edit_count }} time{{ ev.awareness_edit_count|pluralize }} – see history in the audit trail){% endif %}</p>
+
+<section aria-labelledby="clocks-h">
+  <h2 id="clocks-h">Clocks <span class="hint">CRA Art. 14(2)</span></h2>
+  {% include "art14/_clocks_table.html" with full=True %}
+  {% if dst_note %}<p class="hint">ⓘ {{ dst_note }}</p>{% endif %}
+  <p class="hint">Calendar hours. Weekends and holidays are not excluded.</p>
+  {% if month_rule_note %}<p class="hint">Final report: {{ month_rule_note }}</p>{% endif %}
+  {% if fix_warning %}<p class="error">The fix or mitigation time is earlier than the awareness time. Deadlines are calculated as entered. Check this case with legal counsel.</p>{% endif %}
+  <p class="hint">ⓘ This tool does not draft or file reports. File with the single reporting platform yourself, then record the time you filed here.</p>
+</section>
+
+{% if ev.status == "open" %}
+<section class="panel" aria-labelledby="rec-h">
+  <h2 id="rec-h">Record times</h2>
+  {% for which, f in time_forms.items %}
+  <details>
+    <summary>{% if which == "fix" %}Fix or mitigation available (CRA Art. 14(2)(c), pending Official Journal check){% elif which == "early_warning" %}Early warning filing time{% elif which == "notification" %}Notification filing time{% else %}Final report filing time{% endif %}</summary>
+    <form method="post" action="/events/{{ ev.pk }}/time">{% csrf_token %}
+      <input type="hidden" name="which_prefix" value="{{ which }}">
+      {{ f.as_div }}
+      <p><button type="submit">Record time</button></p>
+    </form>
+  </details>
+  {% endfor %}
+</section>
+{% endif %}
+
+<section class="panel" aria-labelledby="det-h">
+  <h2 id="det-h">Details <span class="hint">(responders only; every view is logged)</span></h2>
+  {% if detail and detail.title or detail.description or detail.affected_component or detail.vector %}
+  <dl>
+    <dt>Title</dt><dd>{{ detail.title|default:"–" }}</dd>
+    <dt>Description</dt><dd>{{ detail.description|default:"–"|linebreaksbr }}</dd>
+    <dt>Affected component</dt><dd>{{ detail.affected_component|default:"–" }}</dd>
+    <dt>Vector</dt><dd>{{ detail.vector|default:"–" }}</dd>
+    <dt>Affected deployments</dt><dd>{% for dep in deployments %}{{ dep.label }}{% if not forloop.last %}, {% endif %}{% empty %}–{% endfor %}</dd>
+  </dl>
+  {% else %}
+  <p>{% if ev.started_via == "start_clock" %}Added by the starter: none. {% endif %}<a href="/events/{{ ev.pk }}/details">Add details</a>.</p>
+  {% endif %}
+</section>
+
+<section class="panel" aria-labelledby="inf-h">
+  <h2 id="inf-h">Customer users informed <span class="hint">CRA Art. 14(8) · citation from secondary sources, pending check</span></h2>
+  <p>Recording that customer users were informed, and releasing the incident to their view, arrives in a later release.</p>
+</section>
+
+{% if ev.is_drill %}
+<section class="panel" aria-labelledby="drill-h">
+  <h2 id="drill-h">Drill outcome</h2>
+  {% if ev.drill_outcome %}<p>Would the 24h early warning have been met? {{ ev.drill_outcome.get_early_warning_would_be_met_display }}. {{ ev.drill_outcome.notes }}</p>
+  {% elif drill_form %}<form method="post" action="/events/{{ ev.pk }}/drill-outcome">{% csrf_token %}{{ drill_form.as_div }}<p><button type="submit">Record drill outcome</button></p></form>{% endif %}
+</section>
+{% endif %}
+
+<section class="panel" aria-labelledby="close-h">
+  {% if ev.status == "open" %}
+  <h2 id="close-h">Close event</h2>
+  <form method="post" action="/events/{{ ev.pk }}/close">{% csrf_token %}{{ close_form.as_div }}<p><button type="submit">Close event</button></p></form>
+  <p class="hint">Events are never deleted. Closed events leave the clock strip.</p>
+  {% else %}
+  <h2 id="close-h">{{ ev.get_status_display }}</h2>
+  <p>Closed {% local_only ev.closed_at %}.{% if ev.close_rationale %} Rationale: {{ ev.close_rationale }}{% endif %}</p>
+  <form method="post" action="/events/{{ ev.pk }}/reopen">{% csrf_token %}{{ reopen_form.as_div }}<p><button type="submit">Reopen event</button></p></form>
+  {% endif %}
+</section>
+{% endblock %}

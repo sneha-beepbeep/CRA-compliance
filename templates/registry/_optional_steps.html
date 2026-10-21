@@ -1,0 +1,7 @@
+{% if checklist.optional %}
+<div class="optional-steps">
+  <h3>Optional steps</h3>
+  <p class="hint">Optional. These don't count toward setup.</p>
+  <ul>{% for s in checklist.optional %}<li>{% if s.done %}Done: {% else %}Optional: {% endif %}<a href="{{ s.url }}">{{ s.label }}</a></li>{% endfor %}</ul>
+</div>
+{% endif %}

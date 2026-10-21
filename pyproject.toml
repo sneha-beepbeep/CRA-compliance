@@ -1,0 +1,37 @@
+[project]
+name = "cra-ai-act-tracker"
+version = "0.1.0"
+description = "CRA and AI Act status-and-deadline tracker for vendors of AI credit-scoring software (working title)"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "django>=5.2,<5.3",
+    "psycopg[binary]>=3.2",
+    "pyyaml>=6.0",
+    "tzdata>=2024.1",
+    "mozilla-django-oidc>=4.0",
+    "django-htmx>=1.21",
+    "gunicorn>=23",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pytest-django>=4.9",
+    "hypothesis>=6.100",
+    "bandit>=1.7",
+    "pip-audit>=2.7",
+]
+# Opt-in: PostgreSQL 16 binaries in the venv for local tests without Docker
+# (scripts/localpg.sh). Not used in CI or production.
+localpg = ["pgserver>=0.1.4"]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "tracker.settings.test"
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = [
+    "postgres: needs a real PostgreSQL 16 database (set DATABASE_URL); skipped otherwise",
+]

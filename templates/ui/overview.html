@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Overview{% if version %} · {{ version.product.name }} {{ version.label }}{% endif %}</h1>
+{% if not checklist.complete %}
+<section class="panel" aria-labelledby="setup-h">
+  <h2 id="setup-h">Setup</h2>
+  <p>Setup: {{ checklist.done_count }} of {{ checklist.total }} steps done. This counts setup steps only.</p>
+  <ul>{% for s in checklist.required %}<li>{% if s.done %}Done: {% else %}To do: {% endif %}<a href="{{ s.url }}">{{ s.label }}</a></li>{% endfor %}</ul>
+  {% include "registry/_optional_steps.html" %}
+</section>
+{% endif %}
+{% if version %}
+<section class="panel" aria-labelledby="req-h">
+  <h2 id="req-h">Requirements</h2>
+  <p>Evidence attached for {{ req.attached }} of {{ req.total }} requirements.</p>
+  <p>{% for label, n in req.breakdown %}{{ n }} {{ label }}{% if not forloop.last %} · {% endif %}{% endfor %}</p>
+  <p class="hint">This is a count of records entered here. It is not a score.</p>
+  <a href="/requirements/">View requirements →</a>
+</section>
+<section class="panel" aria-labelledby="risk-h">
+  <h2 id="risk-h">AI-risk register</h2>
+  <p>{{ risk.total }} risks recorded.{% for label, n in risk.breakdown %} {{ n }} {{ label }}{% if not forloop.last %} ·{% endif %}{% endfor %}</p>
+  <p class="hint">This is a count of the vendor's treatment records. It is not a robustness rating.</p>
+  <a href="/ai-risks/">View register →</a>
+</section>
+<section class="panel" aria-labelledby="stale-h">
+  <h2 id="stale-h">Review dates passed ({{ stale|length }})</h2>
+  {% if stale %}<ul>{% for s in stale %}<li><strong>{% if s.requirement %}{{ s.requirement.citation }}{% else %}{{ s.name }}{% endif %}</strong> · review by {{ s.review_by|date:"j M Y" }}</li>{% endfor %}</ul>
+  {% else %}<p>No review-by date has passed for this version.</p>{% endif %}
+</section>
+{% else %}
+<p>No product version recorded yet. <a href="/setup/">Add a product and a version</a>.</p>
+{% endif %}
+{% endblock %}

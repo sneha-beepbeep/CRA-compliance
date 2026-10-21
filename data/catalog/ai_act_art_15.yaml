@@ -1,0 +1,54 @@
+# AI Act Art. 15
+#
+# PLACEHOLDER CONTENT. The requirement rows (short titles, final citations, any
+# split of paragraphs) are a CPO/legal deliverable due 2026-10-30
+# (docs/critical-path.md item 1). Engineering has only created the structure:
+# real citation identifiers, a stable ID per row, an EUR-Lex link, and
+# pending_oj_check: true on every row. Short titles are deliberately
+# "DRAFT – pending legal review" until legal provides them.
+#
+# Row schema (validated by apps/catalog/loader.py):
+#   id               stable ID, never reused
+#   citation         design spec 15.3 format, e.g. "CRA Annex I, Part I(2)(a)"
+#   short_title      under ~10 words, neutral, never "compliant" (copy-lint checks it)
+#   official_url     EUR-Lex link to the Official Journal text
+#   pending_oj_check true until checked against the OJ text
+#   context_only     optional; true = shown as context, no status
+#   attack_class     optional; Art. 15(5) split (data_poisoning, model_poisoning,
+#                    adversarial_examples, confidentiality_attacks, model_flaws)
+
+kind: requirement_set
+schema_version: 1
+code: ai_act_art_15
+title: "AI Act Art. 15"
+source_citation: "Regulation (EU) 2024/1689, Article 15"
+official_url: "https://eur-lex.europa.eu/eli/reg/2024/1689/oj"
+draft: true
+sort_order: 3
+context_note: "DRAFT – pending legal review. Context: CRA Art. 12; CRA Recital 51 (context, not binding). Statuses here are entered separately; this tool does not apply any presumption."
+requirements:
+  - id: AIA-15-1
+    citation: "AI Act Art. 15(1)"
+    short_title: "DRAFT – pending legal review"
+    official_url: "https://eur-lex.europa.eu/eli/reg/2024/1689/oj"
+    pending_oj_check: true
+  - id: AIA-15-2
+    citation: "AI Act Art. 15(2)"
+    short_title: "DRAFT – pending legal review"
+    official_url: "https://eur-lex.europa.eu/eli/reg/2024/1689/oj"
+    pending_oj_check: true
+  - id: AIA-15-3
+    citation: "AI Act Art. 15(3)"
+    short_title: "DRAFT – pending legal review"
+    official_url: "https://eur-lex.europa.eu/eli/reg/2024/1689/oj"
+    pending_oj_check: true
+  - id: AIA-15-4
+    citation: "AI Act Art. 15(4)"
+    short_title: "DRAFT – pending legal review"
+    official_url: "https://eur-lex.europa.eu/eli/reg/2024/1689/oj"
+    pending_oj_check: true
+  - id: AIA-15-5
+    citation: "AI Act Art. 15(5)"
+    short_title: "DRAFT – pending legal review"
+    official_url: "https://eur-lex.europa.eu/eli/reg/2024/1689/oj"
+    pending_oj_check: true

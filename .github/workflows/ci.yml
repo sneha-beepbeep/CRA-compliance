@@ -1,0 +1,43 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: tracker
+          POSTGRES_USER: tracker
+          POSTGRES_PASSWORD: tracker
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U tracker" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgres://tracker:tracker@127.0.0.1:5432/tracker
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync --frozen
+      # Unit, property, golden, copy-lint, isolation, route matrix, integration, static a11y.
+      # The isolation suite blocks merges (technical plan, "Isolation tests").
+      - run: uv run pytest -ra
+      - run: uv run bandit -q -r apps tracker -x tests
+      - run: uv run pip-audit --strict
+      - run: uv run python manage.py makemigrations --check --dry-run --settings=tracker.settings.test
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

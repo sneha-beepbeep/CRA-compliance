@@ -2,3 +2,13 @@
 .claude/settings.local.json
 # DB Browser for SQLite project files (local UI state)
 *.sqbpro
+# Local environments and caches (build stage)
+.venv/
+.venv-bootstrap/
+.uv/
+.localpg/
+.localpg.pw
+staticfiles/
+__pycache__/
+.pytest_cache/
+.hypothesis/

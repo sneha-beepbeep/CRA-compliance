@@ -1,0 +1,68 @@
+# CRA Annex I, Part II
+#
+# PLACEHOLDER CONTENT. The requirement rows (short titles, final citations, any
+# split of paragraphs) are a CPO/legal deliverable due 2026-10-30
+# (docs/critical-path.md item 1). Engineering has only created the structure:
+# real citation identifiers, a stable ID per row, an EUR-Lex link, and
+# pending_oj_check: true on every row. Short titles are deliberately
+# "DRAFT – pending legal review" until legal provides them.
+#
+# Row schema (validated by apps/catalog/loader.py):
+#   id               stable ID, never reused
+#   citation         design spec 15.3 format, e.g. "CRA Annex I, Part I(2)(a)"
+#   short_title      under ~10 words, neutral, never "compliant" (copy-lint checks it)
+#   official_url     EUR-Lex link to the Official Journal text
+#   pending_oj_check true until checked against the OJ text
+#   context_only     optional; true = shown as context, no status
+#   attack_class     optional; Art. 15(5) split (data_poisoning, model_poisoning,
+#                    adversarial_examples, confidentiality_attacks, model_flaws)
+
+kind: requirement_set
+schema_version: 1
+code: cra_annex_i_part_ii
+title: "CRA Annex I, Part II"
+source_citation: "Regulation (EU) 2024/2847, Annex I, Part II"
+official_url: "https://eur-lex.europa.eu/eli/reg/2024/2847/oj"
+draft: true
+sort_order: 2
+requirements:
+  - id: CRA-AI-PII-1
+    citation: "CRA Annex I, Part II(1)"
+    short_title: "DRAFT – pending legal review"
+    official_url: "https://eur-lex.europa.eu/eli/reg/2024/2847/oj"
+    pending_oj_check: true
+  - id: CRA-AI-PII-2
+    citation: "CRA Annex I, Part II(2)"
+    short_title: "DRAFT – pending legal review"
+    official_url: "https://eur-lex.europa.eu/eli/reg/2024/2847/oj"
+    pending_oj_check: true
+  - id: CRA-AI-PII-3
+    citation: "CRA Annex I, Part II(3)"
+    short_title: "DRAFT – pending legal review"
+    official_url: "https://eur-lex.europa.eu/eli/reg/2024/2847/oj"
+    pending_oj_check: true
+  - id: CRA-AI-PII-4
+    citation: "CRA Annex I, Part II(4)"
+    short_title: "DRAFT – pending legal review"
+    official_url: "https://eur-lex.europa.eu/eli/reg/2024/2847/oj"
+    pending_oj_check: true
+  - id: CRA-AI-PII-5
+    citation: "CRA Annex I, Part II(5)"
+    short_title: "DRAFT – pending legal review"
+    official_url: "https://eur-lex.europa.eu/eli/reg/2024/2847/oj"
+    pending_oj_check: true
+  - id: CRA-AI-PII-6
+    citation: "CRA Annex I, Part II(6)"
+    short_title: "DRAFT – pending legal review"
+    official_url: "https://eur-lex.europa.eu/eli/reg/2024/2847/oj"
+    pending_oj_check: true
+  - id: CRA-AI-PII-7
+    citation: "CRA Annex I, Part II(7)"
+    short_title: "DRAFT – pending legal review"
+    official_url: "https://eur-lex.europa.eu/eli/reg/2024/2847/oj"
+    pending_oj_check: true
+  - id: CRA-AI-PII-8
+    citation: "CRA Annex I, Part II(8)"
+    short_title: "DRAFT – pending legal review"
+    official_url: "https://eur-lex.europa.eu/eli/reg/2024/2847/oj"
+    pending_oj_check: true

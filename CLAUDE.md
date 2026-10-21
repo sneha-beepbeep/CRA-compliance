@@ -20,9 +20,9 @@ You are the **orchestrator** for a simulated software product team. The user is 
 
 ## Current status
 
-- **Stage:** 5 complete: `/plan` approved by the CPO on 2026-10-21. Next: `/build`.
-- **Last artifact:** the technical plan, approved, saved as `docs/technical-plan.md`.
-- **CPO approval pending on:** nothing. C4 (2 engineers) and C6 (pilot-agreement clause) are confirmed. On the critical path: the PM or legal delivers about 35 requirement rows by 2026-10-30. Still open: the vendors' delivery models (OQ4); IP clearance; licence checks on the taxonomy seeds; legal review (disclaimer, month rule, C7, Art. 14 checked against the Official Journal) before the bank gets access (around 2026-12-11).
+- **Stage:** 6, `/build`: phase 0 and phase 1a are implemented (2026-10-21), uncommitted on `pipeline-setup`. The CPO hasn't reviewed it yet. The browser accessibility pass and live Keycloak sign-in are still open. Next: the CPO's review, then `/test` or more `/build` work.
+- **Last artifact:** the phase 0 and 1a implementation (`apps/`, `db/sql/`, `tests/`, and the rest). The Engineer reports 572 passed, 0 failed and 2 skipped (Playwright) on PostgreSQL 16.2. Deviation 13 is done: the invite step is optional, behind the `CUSTOMER_INVITATIONS_ENABLED` flag, which is off.
+- **CPO approval pending on:** whether to commit the build to `pipeline-setup` and push it to GitHub. Also needed: catalog content in `data/catalog/` by 2026-10-30; licence checks; infrastructure access (GitHub Actions, EU Keycloak and Postgres).
 - **Pre-pipeline context (for `/ceo-review` and `/kickoff`):** this repo joined the pipeline mid-flight on 2026-10-20. It already holds a SQLite knowledge base of AI risks, innovations, mitigations and barriers extracted from Chapters 1, 2 and 11 of the source book (`schema.sql`, `*.json`, `build_db.py` → `regtech_cyber.db`). The CPO confirmed this repo is the "Provably Secure" / Continuous Hardening as a Service product: the existing database is intended to become the hardened flagship case study. `docs/cpo-draft-prd.md` is the CPO's own pre-pipeline pitch, reformatted. It is **input** to `/kickoff` and `/prd`, not an approved artifact. The open challenge for the CEO is whether hardening a database of public reference content proves anything to buyers. *(Superseded 2026-10-21. See the decision log: the CPO reversed the "hardened flagship case study" premise during `/ceo-review`.)*
 - **Decision log:**
   - 2026-10-20 — **Pre-pipeline build (CPO decision, ahead of the gates):** added the `finding` table plus the `security_changelog` and `cra_deadline_check` views to `schema.sql`, fed from `findings.json` (empty). Built before `/prd`, `/design` and `/plan` at the CPO's explicit request. Later stages should treat it as an existing component to confirm or revise, not as approved scope. Assumption to confirm in `/prd`: CRA Art. 14 applies to manufacturers of products with digital elements; whether a hosted database service falls under the CRA, NIS2 or both is unresolved.
@@ -92,6 +92,9 @@ You are the **orchestrator** for a simulated software product team. The user is 
       - C8: NIST AI 100-2 and MITRE ATLAS as taxonomy seeds after a licence check; OWASP on hold.
     - **C4 and C6, confirmed by the CPO on 2026-10-21:** 2 engineers; the pilot agreement will state that no real incident data is loaded until the pentest passes.
     - **Pre-built schema:** `finding` and `cra_deadline_check` move into the tracker; `security_changelog` and `findings.json` will be removed.
+  - 2026-10-21 — **Build review (phase 0 and 1a):**
+    - The CPO approved all 12 build deviations, including 4 (dev-only login), 5 (`app_auth` role), 7 (`real_events_enabled` enforces C6 in code) and 9 (20-character minimum reasons).
+    - The "Invite a customer admin" setup step is hidden in the pilot cut and becomes optional: it never counts toward checklist completion. This is deviation 13 against design F-1.
 
 ## Rules for the orchestrator
 

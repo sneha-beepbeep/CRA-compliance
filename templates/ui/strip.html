@@ -1,0 +1,32 @@
+{% load tracker %}<section id="clock-strip" class="strip" aria-labelledby="strip-h" hx-get="/clocks/strip" hx-trigger="every 30s" hx-swap="outerHTML" data-server-now="{{ server_now|iso }}" data-tab-title="{{ tab_title }}">
+  {% if strip_rows %}
+  <h2 id="strip-h">▲ ART. 14 CLOCKS · {{ strip_rows|length|add:strip_more }} open</h2>
+  <ul>
+  {% for r in strip_rows %}
+    {% if r.event %}
+    <li class="tier-{{ r.tier }}{% if r.event.is_drill %} drill{% endif %}" data-event="{{ r.event.pk }}" data-tier="{{ r.tier }}" data-announce="{% if r.event.is_drill %}Drill {% endif %}{{ r.event.ref }}: {{ r.next_clock.kind|clock_name }} {% if r.next_clock.state.value == 'overdue' %}now overdue{% else %}open{% endif %}">
+      ■ {% if r.event.is_drill %}DRILL {% endif %}{{ r.event.ref }} {{ r.event.get_event_type_display }} ·
+      {{ r.next_clock.kind|clock_name|upper }}
+      {% if r.next_clock.state.value == "overdue" %}<strong>OVERDUE</strong>{% else %}due in{% endif %}
+      <span aria-hidden="true" data-due="{{ r.next_clock.due_at|iso }}">{% countdown r.next_clock.due_at %}</span><span class="visually-hidden">{% countdown_label r.next_clock %}</span>
+      <br>{% dual r.next_clock.due_at %} · Responder: {{ r.event.assigned_responder.short_name }}
+      {% if r.message %} · ▲ {{ r.message }}{% endif %}
+      {% if r.event.awaiting_responder %}<br><span class="awaiting">AWAITING RESPONDER</span> – started by {{ r.event.started_by.short_name }} {{ r.event.started_at|timesince }} ago{% endif %}
+      {% if "incident_responder" in roles %}
+        <a href="/events/{{ r.event.pk }}/">{% if r.event.awaiting_responder %}Open and take over →{% else %}Open event →{% endif %}</a>
+      {% else %}
+        · Details restricted to incident responders
+      {% endif %}
+    </li>
+    {% else %}
+    <li class="tier-overdue" data-event="none" data-tier="overdue">▲ {{ r.message }}</li>
+    {% endif %}
+  {% endfor %}
+  </ul>
+  {% if strip_more %}<a href="/events/">+ {{ strip_more }} more →</a>{% endif %}
+  {% else %}
+  <h2 id="strip-h" class="strip-empty">No open Art. 14 clocks recorded.</h2>
+  {% endif %}
+  <p id="sync-note" class="sync-note" hidden></p>
+  <p id="clock-skew" class="sync-note" hidden>Your device clock differs from the server. Countdowns use server time.</p>
+</section>

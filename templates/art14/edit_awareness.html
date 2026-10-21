@@ -1,0 +1,28 @@
+{% extends "base.html" %}{% load tracker %}
+{% block content %}
+<h1>{% if ev.is_drill %}DRILL {% endif %}{{ ev.ref }} · Edit awareness time</h1>
+<p>Current awareness time: {% dual ev.awareness_at %}</p>
+<form method="post">{% csrf_token %}
+  {% if form.non_field_errors %}<div class="error" role="alert">Not saved. {{ form.non_field_errors }}</div>{% endif %}
+  {{ form.as_div }}
+  {% if changes %}
+  <section class="panel" aria-labelledby="ba-h">
+    <h2 id="ba-h">Before and after</h2>
+    <table>
+      <thead><tr><th scope="col">Deadline</th><th scope="col">Before</th><th scope="col">After</th></tr></thead>
+      <tbody>
+      {% for c in changes %}
+      <tr{% if c.state_changed %} class="banner"{% endif %}>
+        <th scope="row">{{ c.kind|clock_name }}</th>
+        <td>{% if c.before.due_at %}{% dual c.before.due_at False %}{% else %}–{% endif %} · {{ c.before.state.value }}</td>
+        <td>{% if c.after.due_at %}{% dual c.after.due_at False %}{% else %}–{% endif %} · {{ c.after.state.value }}{% if c.state_changed %}<br><strong>{{ c.kind|clock_name }} will change from {{ c.before.state.value }} to {{ c.after.state.value }}.</strong>{% endif %}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  <p><button class="primary" type="submit" name="action" value="confirm">Confirm new awareness time</button></p>
+  {% endif %}
+  <p><button type="submit" name="action" value="preview">Show before and after</button> <a href="/events/{{ ev.pk }}/">Cancel</a></p>
+</form>
+{% endblock %}

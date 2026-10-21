@@ -1,0 +1,38 @@
+{% extends "base.html" %}{% load tracker %}
+{% block content %}
+<p><a href="/ai-risks/">← AI-risk register</a></p>
+<h1>{{ r.name }}</h1>
+<p>{{ r.version.product.name }} {{ r.version.label }}{% if r.attack_class %} · AI Act Art. 15(5) attack class: {{ r.attack_class }}{% endif %}</p>
+{% if r.description %}<p>{{ r.description }}</p>{% endif %}
+{% if r.taxonomy_item %}<p class="hint">Original taxonomy text ({{ r.taxonomy_item.taxonomy.name }}, {{ r.taxonomy_item.ref }}): {{ r.taxonomy_item.name }}{% if r.taxonomy_item.description %} – {{ r.taxonomy_item.description }}{% endif %}</p>{% endif %}
+<section class="panel" aria-labelledby="stage-h">
+  <h2 id="stage-h">Handling stage</h2>
+  <p>Current: {% chip r.display_stage %} · Last tested: {{ r.last_tested|date:"j M Y"|default:"Not tested (no test evidence recorded)" }} · Last reviewed: {{ r.last_reviewed_on|date:"j M Y"|default:"–" }}</p>
+  <form method="post" action="/ai-risks/{{ r.pk }}/reviewed">{% csrf_token %}<button type="submit">Mark reviewed today</button></form>
+  <form method="post">{% csrf_token %}
+    {% if form.non_field_errors %}<div class="error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+    {{ form.as_div }}
+    <p class="hint">Owner names are not shown to customers; they see “Owner assigned”.</p>
+    <p><button class="primary" type="submit">Save handling stage</button></p>
+  </form>
+</section>
+<section class="panel" aria-labelledby="ev-h">
+  <h2 id="ev-h">Evidence items</h2>
+  <p class="hint">Titles, types and dates are visible to your customers. Files and links are not. “Last tested” is the date of the most recent test report.</p>
+  {% if evidence %}<ul>{% for e in evidence %}<li>{{ e.title }} · {{ e.get_type_display }} · {{ e.evidence_date|date:"j M Y" }}{% if e.url %} · <a href="{{ e.url }}" rel="noopener noreferrer">Link ↗</a>{% endif %}</li>{% endfor %}</ul>{% else %}<p>No evidence items recorded here.</p>{% endif %}
+  <form method="post" action="/ai-risks/{{ r.pk }}/evidence">{% csrf_token %}{{ evidence_form.as_div }}<p><button type="submit">Add evidence item</button></p></form>
+</section>
+<section class="panel" aria-labelledby="links-h">
+  <h2 id="links-h">Linked requirements</h2>
+  <p class="hint">Linked for reference. Doesn't change either status.</p>
+  {% if links %}<ul>{% for l in links %}<li>{{ l.requirement.citation }}</li>{% endfor %}</ul>{% endif %}
+  <form method="post" action="/ai-risks/{{ r.pk }}/link">{% csrf_token %}
+    <label for="link-req">Requirement</label>
+    <select id="link-req" name="requirement">{% for q in linkable %}<option value="{{ q.pk }}">{{ q.citation }}</option>{% endfor %}</select>
+    <button type="submit">Link</button>
+  </form>
+</section>
+<section aria-labelledby="hist-h"><h2 id="hist-h">History</h2>
+{% if history %}<ul>{% for h in history %}<li>{% local_only h.created_at %} · {{ h.actor_name }} · {{ h.action }}</li>{% endfor %}</ul>{% else %}<p>No changes recorded.</p>{% endif %}
+</section>
+{% endblock %}

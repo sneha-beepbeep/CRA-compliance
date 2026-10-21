@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Start an Art. 14 clock</h1>
+<p>You can start the deadlines now. An incident responder will add the details. Don't describe the issue here. Tell the responder directly.</p>
+{% if drill %}<p class="banner drill-banner"><strong>DRILL</strong> · Until real incident data is enabled for this workspace (pilot agreement), clocks started here are drills.</p>{% endif %}
+<form method="post">{% csrf_token %}
+  <div hx-post="" hx-trigger="change" hx-include="closest form" hx-target="#preview" hx-select="#preview" hx-swap="outerHTML">
+  {% if form.non_field_errors %}<div class="error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+  {{ form.as_div }}
+  </div>
+  {% include "art14/_preview.html" %}
+  <p><button type="submit" name="action" value="preview">Update deadline preview</button>
+     <button class="primary" type="submit" name="action" value="save">Start clock and assign</button>
+     <a href="/events/">Cancel</a></p>
+</form>
+{% endblock %}

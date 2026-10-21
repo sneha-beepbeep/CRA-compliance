@@ -1,0 +1,62 @@
+{% load static tracker %}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="htmx-config" content='{"includeIndicatorStyles": false, "allowEval": false, "allowScriptTags": false}'>
+<title>{% block title %}{{ tab_title|default:product_name }}{% endblock %}</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="{% static 'css/app.css' %}">
+<script src="{% static 'django_htmx/htmx-2.min.js' %}" defer></script>
+<script src="{% static 'js/clocks.js' %}" defer></script>
+<script src="{% static 'js/timezone.js' %}" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <span class="brand">[{{ product_name }}]</span>
+  {% if tenant %}<span>{{ tenant.display_name }}</span>{% endif %}
+  {% if workspace == "vendor" and versions %}
+  <form method="post" action="/version/select">{% csrf_token %}
+    <label for="version-select" class="visually-hidden">Product and version</label>
+    <select id="version-select" name="version">
+      {% for v in versions %}<option value="{{ v.pk }}"{% if v.pk == current_version.pk %} selected{% endif %}>{{ v.product.name }} · version {{ v.label }}</option>{% endfor %}
+    </select>
+    <input type="hidden" name="next" value="{{ request.path }}">
+    <button type="submit">Show</button>
+  </form>
+  {% endif %}
+  {% if request.user.is_authenticated %}
+  <span>{{ request.user.display_name }}{% if "incident_responder" in roles %} · incident responder{% endif %}</span>
+  <a href="/profile/">Profile</a>
+  <form method="post" action="/sign-out/">{% csrf_token %}<button type="submit">Sign out</button></form>
+  {% endif %}
+</header>
+{% if workspace == "vendor" %}{% include "ui/strip.html" %}{% endif %}
+{% if tz_banner_form %}{% include "ui/timezone_banner.html" %}{% endif %}
+<div class="layout">
+  {% if workspace == "vendor" %}
+  <nav class="side" aria-label="Main">
+    <ul>
+      <li><a href="/"{% if request.path == "/" %} aria-current="page"{% endif %}>Overview</a></li>
+      <li><a href="/requirements/"{% if "/requirements/" in request.path %} aria-current="page"{% endif %}>Requirements</a></li>
+      <li><a href="/ai-risks/"{% if "/ai-risks/" in request.path %} aria-current="page"{% endif %}>AI-risk register</a></li>
+      <li><a href="/events/"{% if "/events/" in request.path %} aria-current="page"{% endif %}>Art. 14 events</a></li>
+      <li><a href="/setup/"{% if "/setup/" in request.path %} aria-current="page"{% endif %}>Products and customers</a></li>
+      <li><a href="/audit/"{% if "/audit/" in request.path %} aria-current="page"{% endif %}>Audit trail</a></li>
+    </ul>
+    <p><a href="/help/">Help</a></p>
+  </nav>
+  {% else %}<nav class="side" aria-label="Main"><p><a href="/help/">Help</a></p></nav>{% endif %}
+  <main id="main">
+    {% if messages %}<div role="status">{% for m in messages %}<p class="banner">{{ m }}</p>{% endfor %}</div>{% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+<footer class="notice">
+  <p class="disclaimer">{{ disclaimer }}</p>
+  <p>{% if server_now %}Last synced {{ server_now|date:"H:i" }} UTC · {% endif %}Times shown: {{ request.user.time_zone|default:"UTC" }}</p>
+</footer>
+<div id="clock-live" class="visually-hidden" aria-live="polite"></div>
+</body>
+</html>

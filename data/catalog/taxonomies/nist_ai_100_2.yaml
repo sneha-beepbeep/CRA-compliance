@@ -1,0 +1,29 @@
+# NIST AI 100-2 (Adversarial Machine Learning: A Taxonomy and Terminology of
+# Attacks and Mitigations) seed taxonomy (C8).
+#
+# licence_status: pending. Licence check is open (docs/critical-path.md item 3):
+# check the publication's front matter for any notice and record the attribution.
+#
+# Content is NOT copied from the publication. The items below are a handful of
+# clearly marked samples (top-level attack class names only, to be verified).
+kind: taxonomy
+schema_version: 1
+code: nist_ai_100_2
+name: "NIST AI 100-2"
+source_url: "https://csrc.nist.gov/pubs/ai/100/2/e2025/final"
+licence: "US government work (to be confirmed by licence check)"
+attribution: ""
+licence_status: pending
+items:
+  - ref: "SAMPLE-EVASION"
+    name: "SAMPLE – Evasion attacks (verify against source)"
+    attack_class: adversarial_examples
+    sample: true
+  - ref: "SAMPLE-POISONING"
+    name: "SAMPLE – Poisoning attacks (verify against source)"
+    attack_class: data_poisoning
+    sample: true
+  - ref: "SAMPLE-PRIVACY"
+    name: "SAMPLE – Privacy attacks (verify against source)"
+    attack_class: confidentiality_attacks
+    sample: true

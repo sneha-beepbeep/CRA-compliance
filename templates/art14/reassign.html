@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{% if ev.is_drill %}DRILL {% endif %}{{ ev.ref }} · Reassign responder</h1>
+<p>Currently assigned to {{ ev.assigned_responder.display_name }}. Assignment is not an incident detail. The change is recorded in the audit trail.</p>
+<form method="post">{% csrf_token %}
+  {{ form.as_div }}
+  <p><button class="primary" type="submit">Reassign</button> <a href="/events/">Cancel</a></p>
+</form>
+<p class="hint">The dashboard does not notify them. Contact the new responder yourself.</p>
+{% endblock %}

@@ -1,0 +1,23 @@
+# ALLOWLIST. Ignore everything, then re-include only what infra/Dockerfile copies.
+# New files are excluded by default, so nothing book-derived (regtech_cyber.db,
+# *.json, schema.sql, build_db.py, the notebook; IP not cleared, critical-path
+# item 5), no docs, tests, secrets or local environments (.venv, .uv, .playwright,
+# .localpg, .localpg.pw) can reach the build context by accident.
+# tests/unit/test_knowledge_base.py and scripts in the build report check this.
+*
+!pyproject.toml
+!uv.lock
+!manage.py
+!tracker
+!apps
+!templates
+!static
+!data
+!db
+
+# Re-exclude inside the allowed directories: caches and development-only code.
+**/__pycache__
+**/*.pyc
+**/.DS_Store
+apps/tenancy/devdata.py
+apps/tenancy/management/commands/seed_dev.py

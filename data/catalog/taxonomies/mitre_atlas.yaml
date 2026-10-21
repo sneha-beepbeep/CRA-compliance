@@ -1,0 +1,32 @@
+# MITRE ATLAS seed taxonomy (C8).
+#
+# licence_status: pending. Licence check is open (docs/critical-path.md item 3,
+# due 2026-11-13): confirm commercial use and redistribution from the LICENSE
+# file in the mitre-atlas GitHub repository, and record the attribution text.
+# Seeding from a taxonomy is blocked in the product until licence_status is
+# "cleared".
+#
+# Content is NOT copied from ATLAS. The items below are a handful of clearly
+# marked samples (identifier and short name only, to be verified against the
+# source) so the loader and the seeding screen can be exercised.
+kind: taxonomy
+schema_version: 1
+code: mitre_atlas
+name: "MITRE ATLAS"
+source_url: "https://atlas.mitre.org/"
+licence: "Apache-2.0 (to be confirmed by licence check)"
+attribution: ""
+licence_status: pending
+items:
+  - ref: "AML.T0020"
+    name: "SAMPLE – Poison Training Data (verify against source)"
+    attack_class: data_poisoning
+    sample: true
+  - ref: "AML.T0043"
+    name: "SAMPLE – Craft Adversarial Data (verify against source)"
+    attack_class: adversarial_examples
+    sample: true
+  - ref: "AML.T0024"
+    name: "SAMPLE – Exfiltration via ML Inference API (verify against source)"
+    attack_class: confidentiality_attacks
+    sample: true

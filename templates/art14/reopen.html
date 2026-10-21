@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ ev.ref }} · Reopen event</h1>
+<form method="post" action="/events/{{ ev.pk }}/reopen">{% csrf_token %}
+  {% if form.non_field_errors %}<div class="error" role="alert">Not saved. {{ form.non_field_errors }}</div>{% endif %}
+  {{ form.as_div }}
+  <p><button class="primary" type="submit">Reopen event</button> <a href="/events/{{ ev.pk }}/">Cancel</a></p>
+</form>
+{% endblock %}

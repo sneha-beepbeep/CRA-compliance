@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Signed out – deadlines hidden{% endblock %}
+{% block content %}
+<h1>Signed out</h1>
+{% if expired %}<p>Your session ended after a period without activity. Deadlines are hidden until you sign in again.</p>{% else %}<p>You have signed out.</p>{% endif %}
+<p><a href="/sign-in/">Sign in again</a></p>
+{% endblock %}

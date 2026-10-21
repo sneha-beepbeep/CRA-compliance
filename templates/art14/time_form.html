@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ ev.ref }} · Record time</h1>
+<form method="post" action="/events/{{ ev.pk }}/time">{% csrf_token %}
+  <input type="hidden" name="which_prefix" value="{{ which }}">
+  {% if form.non_field_errors %}<div class="error" role="alert">Not saved. {{ form.non_field_errors }}</div>{% endif %}
+  {{ form.as_div }}
+  <p><button class="primary" type="submit">Record time</button> <a href="/events/{{ ev.pk }}/">Cancel</a></p>
+</form>
+{% endblock %}

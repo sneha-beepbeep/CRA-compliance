@@ -1,0 +1,31 @@
+{% extends "base.html" %}{% load tracker %}
+{% block content %}
+<h1>Audit trail</h1>
+<form method="get" aria-label="Filter audit trail">
+  <label for="a-area">Area</label><select id="a-area" name="area"><option value="">All</option>{% for a in areas %}<option{% if f.area == a %} selected{% endif %}>{{ a }}</option>{% endfor %}</select>
+  <label for="a-action">Action</label><select id="a-action" name="action"><option value="">All</option>{% for code, label in actions %}<option value="{{ code }}"{% if f.action == code %} selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+  <label for="a-from">From (YYYY-MM-DD)</label><input id="a-from" name="from" value="{{ f.from }}">
+  <label for="a-to">To (YYYY-MM-DD)</label><input id="a-to" name="to" value="{{ f.to }}">
+  <label for="a-ref">Ref</label><input id="a-ref" name="ref" value="{{ f.ref }}">
+  <button type="submit">Apply filters</button>
+</form>
+{% if entries %}
+<table class="cards">
+  <thead><tr><th scope="col">When</th><th scope="col">Who</th><th scope="col">Action</th><th scope="col">Change</th></tr></thead>
+  <tbody>
+  {% for e in entries %}
+  <tr>
+    <td data-label="When">{% dual e.created_at False %}</td>
+    <td data-label="Who">{{ e.who }}{% if e.role %} ({{ e.role }}){% endif %}</td>
+    <td data-label="Action">{{ e.action_label }}</td>
+    <td data-label="Change">{{ e.target }}{% if e.old_text %}<br>Before: {{ e.old_text }}{% endif %}{% if e.new_text %}<br>After: {{ e.new_text }}{% endif %}{% if e.reason %}<br>Reason: {{ e.reason }}{% endif %}{% if e.note %}<br>{{ e.note }}{% endif %}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% if truncated %}<p class="hint">Showing the latest 200 entries. Narrow the filters to see older entries.</p>{% endif %}
+{% else %}
+<p>No entries match these filters.</p>
+{% endif %}
+<p class="hint">Append-only. Entries can't be edited or deleted. Audit export arrives in a later release.</p>
+{% endblock %}

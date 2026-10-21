@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% load tracker %}
+{% block content %}
+<h1>Clock started · {% if ev.is_drill %}DRILL {% endif %}{{ ev.ref }} · {{ ev.get_event_type_display }}</h1>
+<p>Awareness time you entered: {% dual ev.awareness_at %}</p>
+<table>
+  <tbody>
+    <tr><th scope="row">Early warning</th><td>{% dual d.early_warning.due_at %}</td><td>in {% countdown d.early_warning.due_at %}</td></tr>
+    <tr><th scope="row">Notification</th><td>{% dual d.notification.due_at %}</td><td>in {% countdown d.notification.due_at %}</td></tr>
+  </tbody>
+</table>
+<p><strong>Assigned to {{ ev.assigned_responder.display_name }}. The dashboard does not notify them.</strong></p>
+<p>Contact {{ ev.assigned_responder.display_name }} now (phone, chat) and give them reference {{ ev.ref }}.</p>
+<p>From now on you'll see this event's deadline states only. Details, including any changes to the awareness time, are restricted to incident responders.</p>
+<p><a class="button primary" href="/events/">Done</a></p>
+{% endblock %}

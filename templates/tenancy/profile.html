@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Profile</h1>
+<p>{{ request.user.display_name }} · {{ request.user.email }}{% if request.user.last_login %} · Last sign-in {{ request.user.last_login|date:"j M Y, H:i" }} UTC{% endif %}</p>
+<form method="post">{% csrf_token %}
+  {{ form.as_div }}
+  <p class="hint">Every time is shown in this zone and in UTC.</p>
+  <p><button class="primary" type="submit">Save time zone</button></p>
+</form>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Products and customers</h1>
+<section class="panel" aria-labelledby="setup-h">
+  <h2 id="setup-h">Setup</h2>
+  <p>Setup: {{ checklist.done_count }} of {{ checklist.total }} steps done.</p>
+  <ul>{% for s in checklist.required %}<li>{% if s.done %}Done: {% else %}To do: {% endif %}{{ s.label }}</li>{% endfor %}</ul>
+  {% include "registry/_optional_steps.html" %}
+  <p><a href="/setup/users/">Users and roles →</a></p>
+</section>
+<section aria-labelledby="prod-h">
+  <h2 id="prod-h">Products and versions</h2>
+  {% if products %}
+  <table class="cards"><thead><tr><th scope="col">Product</th><th scope="col">Annex III category</th><th scope="col">Delivery model</th><th scope="col">Versions</th></tr></thead><tbody>
+  {% for p in products %}<tr><td data-label="Product">{{ p.name }}<br><span class="hint">{{ p.intended_purpose|truncatechars:120 }}</span></td><td data-label="Category">{{ p.category.citation }} (category selected by vendor)</td><td data-label="Delivery model">{{ p.get_delivery_model_display|default:"–" }}{% if p.delivery_model == "hosted_only" %}<br><span class="hint">{{ hosted_warning }}</span>{% endif %}</td><td data-label="Versions">{% for v in p.versions.all %}{{ v.label }}{% if not forloop.last %}, {% endif %}{% empty %}–{% endfor %}</td></tr>{% endfor %}
+  </tbody></table>
+  {% else %}<p>No products recorded yet.</p>{% endif %}
+  <details{% if product_form.errors %} open{% endif %}><summary>Add a product</summary>
+    <form method="post" action="/setup/product">{% csrf_token %}{{ product_form.as_div }}<p class="hint">If “Browser-only or hosted API only”: {{ hosted_warning }}</p><p><button class="primary" type="submit">Add product</button></p></form>
+  </details>
+  <details{% if version_form.errors %} open{% endif %}><summary>Add a version</summary>
+    <form method="post" action="/setup/version">{% csrf_token %}{{ version_form.as_div }}<p class="hint">The requirement sets for the product's category attach automatically from the catalog data.</p><p><button class="primary" type="submit">Add version</button></p></form>
+  </details>
+</section>
+<section aria-labelledby="dep-h">
+  <h2 id="dep-h">Deployments</h2>
+  {% if deployments %}
+  <table class="cards"><thead><tr><th scope="col">Deployment</th><th scope="col">Customer</th><th scope="col">Product and version</th></tr></thead><tbody>
+  {% for d in deployments %}<tr><td data-label="Deployment">{{ d.label }}</td><td data-label="Customer">{{ d.customer_tenant.display_name }}</td><td data-label="Version">{{ d.product.name }} {{ d.version.label|default:"(version not recorded)" }}</td></tr>{% endfor %}
+  </tbody></table>
+  {% else %}<p>No deployments recorded yet.</p>{% endif %}
+  <details{% if deployment_form.errors %} open{% endif %}><summary>Add a deployment</summary>
+    <form method="post" action="/setup/deployment">{% csrf_token %}{{ deployment_form.as_div }}<p><button class="primary" type="submit">Add deployment</button></p></form>
+  </details>
+  <p class="hint">Customer access (inviting customer read-only admins) arrives in a later release.</p>
+</section>
+{% endblock %}

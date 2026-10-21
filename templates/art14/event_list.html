@@ -1,0 +1,33 @@
+{% extends "base.html" %}{% load tracker %}
+{% block content %}
+<h1>Art. 14 events</h1>
+<p>
+  {% if is_responder %}{% if real_events_enabled %}<a class="button" href="/events/log">+ Log event</a> {% endif %}<a class="button" href="/events/log?drill=1">+ Log drill</a>{% endif %}
+  <a class="button" href="/events/start">+ Start a clock</a>
+</p>
+<p>Showing:
+  <a href="?show=open"{% if show == "open" %} aria-current="page"{% endif %}>Open ({{ counts.open }})</a> ·
+  <a href="?show=closed"{% if show == "closed" %} aria-current="page"{% endif %}>Closed ({{ counts.closed }})</a> ·
+  <a href="?show=drills"{% if show == "drills" %} aria-current="page"{% endif %}>Drills ({{ counts.drills }})</a></p>
+{% if not is_responder %}<p class="hint">Event details are restricted to incident responders. You can see deadline states and who is responsible.</p>{% endif %}
+{% if rows %}
+<table class="cards">
+  <thead><tr><th scope="col">Ref</th><th scope="col">Type</th><th scope="col">Product</th><th scope="col">Early warning (24h)</th><th scope="col">Notification (72h)</th><th scope="col">Final report</th><th scope="col">Responder</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+  <tr class="{% if r.event.is_drill %}drill{% endif %}">
+    <td data-label="Ref">{% if r.event.is_drill %}DRILL {% endif %}{% if is_responder %}<a href="/events/{{ r.event.pk }}/">{{ r.event.ref }}</a>{% else %}{{ r.event.ref }}{% endif %}{% if r.event.status != "open" %}<br>{{ r.event.get_status_display }}{% endif %}</td>
+    <td data-label="Type">{{ r.event.get_event_type_display }}{% if r.event.started_via == "start_clock" %}<br><span class="hint">Started by {{ r.event.started_by.short_name }}</span>{% endif %}</td>
+    <td data-label="Product">{{ r.event.product.name }}</td>
+    {% for c in r.deadlines.clocks %}
+    <td data-label="{{ c.kind|clock_name }}">{% clock_state c %}{% if c.state.value == "open" or c.state.value == "overdue" %}<br><span aria-hidden="true" data-due="{{ c.due_at|iso }}">{% countdown c.due_at %}</span><span class="visually-hidden">{% countdown_label c %}</span><br><span class="hint">{% dual c.due_at False %}</span>{% elif c.state.value == "not started" %}<br><span class="hint">{% if c.kind == "final_report" and r.event.event_type == "vulnerability" %}(no fix recorded){% elif c.kind == "final_report" %}(no notification filing recorded){% endif %}</span>{% endif %}</td>
+    {% endfor %}
+    <td data-label="Responder">{{ r.event.assigned_responder.short_name }}{% if r.event.awaiting_responder %}<br><span class="awaiting">AWAITING RESPONDER</span>{% endif %}{% if r.event.status == "open" %}<br><a href="/events/{{ r.event.pk }}/reassign">Reassign responder</a>{% endif %}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>No Art. 14 events recorded. This list shows only events entered here.</p>
+{% endif %}
+{% endblock %}

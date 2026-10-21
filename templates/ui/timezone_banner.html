@@ -1,0 +1,12 @@
+<section id="tz-banner" class="banner tz-banner" aria-labelledby="tz-banner-h">
+  <h2 id="tz-banner-h">Confirm your time zone</h2>
+  <p>Times are shown in <strong>{{ request.user.time_zone }}</strong> and UTC until you confirm. Deadlines are always calculated in UTC; this only changes how times are displayed to you.</p>
+  <p id="tz-detected" hidden>Your browser reports <strong id="tz-detected-name"></strong>. It is selected below.</p>
+  <form method="post" action="/profile/time-zone">{% csrf_token %}
+    {{ tz_banner_form.detected }}{{ tz_banner_form.next }}
+    <label for="{{ tz_banner_form.time_zone.id_for_label }}">Time zone</label>
+    {{ tz_banner_form.time_zone }}
+    <button class="primary" type="submit">Confirm time zone</button>
+    <a href="/profile/">Change later in your profile</a>
+  </form>
+</section>

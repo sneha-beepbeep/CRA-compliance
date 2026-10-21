@@ -1,0 +1,15 @@
+{% load tracker %}<table class="cards">
+  <caption class="visually-hidden">Deadlines</caption>
+  <thead><tr><th scope="col">Deadline</th><th scope="col">Due</th><th scope="col">State</th>{% if full %}<th scope="col">Filing time recorded</th>{% endif %}</tr></thead>
+  <tbody>
+  {% for c in d.clocks %}
+  <tr>
+    <th scope="row" data-label="Deadline">{{ c.kind|clock_name }}{% if c.kind == "early_warning" %} 24h{% elif c.kind == "notification" %} 72h{% elif ev.event_type == "vulnerability" %} (fix + 14 days){% else %} (notification + 1 month){% endif %}</th>
+    <td data-label="Due">{% if c.due_at %}{% dual c.due_at %}{% else %}–{% endif %}</td>
+    <td data-label="State">{% clock_state c %}{% if c.state.value == "open" or c.state.value == "overdue" %}<br><span aria-hidden="true" data-due="{{ c.due_at|iso }}">{% countdown c.due_at %}</span><span class="visually-hidden">{% countdown_label c %}</span>{% elif c.state.value == "stopped" %}<br>stopped – event closed as not reportable on {{ ev.closed_at|date:"j M Y" }}{% elif c.state.value == "not started" %}<br><span class="hint">{% if ev.event_type == "vulnerability" %}Starts when a fix or mitigation is recorded as available.{% else %}Starts when the notification filing time is recorded.{% endif %}</span>{% endif %}</td>
+    {% if full %}<td data-label="Filing time recorded">{% if c.filed_at %}{% dual c.filed_at %}{% else %}Not recorded{% endif %}</td>{% endif %}
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+<p class="hint">“Met” and “late” describe recorded timestamps, not the content or validity of what was filed.</p>

@@ -1,0 +1,54 @@
+{% extends "base.html" %}{% load tracker %}
+{% block content %}
+{% if not version %}
+<h1>AI-risk register</h1>
+<p>No product version recorded yet. <a href="/setup/">Add a product and a version</a>.</p>
+{% else %}
+<h1>AI-risk register · {{ version.product.name }} {{ version.label }}</h1>
+<section class="panel" aria-labelledby="sum-h">
+  <h2 id="sum-h">Summary</h2>
+  <p>{{ summary.total }} risks recorded.{% for label, n in summary.breakdown %} {{ n }} {{ label }}{% if not forloop.last %} ·{% endif %}{% endfor %}</p>
+  <p class="hint">This is a count of the vendor's treatment records. It is not a robustness rating.</p>
+</section>
+{% if risks %}
+<table class="cards">
+  <thead><tr><th scope="col">Risk</th><th scope="col">Source taxonomy</th><th scope="col">Handling stage</th><th scope="col">Last tested</th><th scope="col">Last reviewed</th><th scope="col">Owner</th></tr></thead>
+  <tbody>
+  {% for r in risks %}
+  <tr>
+    <td data-label="Risk"><a href="/ai-risks/{{ r.pk }}/">{{ r.name }}</a>{% if r.attack_class %}<br><span class="hint">AI Act Art. 15(5) · {{ r.attack_class }}</span>{% endif %}</td>
+    <td data-label="Source taxonomy">{% if r.taxonomy_item %}{{ r.taxonomy_item.taxonomy.name }}, {{ r.taxonomy_item.ref }}{% else %}Added by vendor{% endif %}</td>
+    <td data-label="Handling stage">{% chip r.display_stage %}</td>
+    <td data-label="Last tested">{{ r.last_tested|date:"j M Y"|default:"Not tested (no test evidence recorded)" }}</td>
+    <td data-label="Last reviewed">{{ r.last_reviewed_on|date:"j M Y"|default:"–" }}</td>
+    <td data-label="Owner">{{ r.owner.short_name|default:"–" }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>No AI-specific risks recorded for this version. Seed from a taxonomy, add a risk, or import a CSV (import arrives in pilot week 1).</p>
+{% endif %}
+<section class="panel" aria-labelledby="seed-h">
+  <h2 id="seed-h">Seed from a taxonomy</h2>
+  <p class="hint">Seeding creates risks in “not assessed”. A taxonomy can be used once its licence is cleared.</p>
+  <form method="post" action="/ai-risks/seed">{% csrf_token %}
+    <fieldset><legend>Taxonomy</legend>
+    {% for t in taxonomies %}
+      <div><input type="radio" id="tx-{{ t.code }}" name="taxonomy" value="{{ t.code }}"{% if not t.seedable %} disabled{% endif %}>
+      <label for="tx-{{ t.code }}" class="inline">{{ t.name }}</label>
+      <span class="hint">Source: {{ t.source_url }} · Licence: {{ t.licence }} · Licence check: {{ t.licence_status }}</span></div>
+    {% empty %}<p>No taxonomies loaded.</p>{% endfor %}
+    </fieldset>
+    <p><button type="submit">Seed register</button></p>
+  </form>
+</section>
+<section class="panel" aria-labelledby="add-h">
+  <h2 id="add-h">Add a risk</h2>
+  <form method="post" action="/ai-risks/add">{% csrf_token %}
+    {{ form.as_div }}
+    <p><button class="primary" type="submit">Add risk</button></p>
+  </form>
+</section>
+{% endif %}
+{% endblock %}

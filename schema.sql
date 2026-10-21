@@ -2,10 +2,11 @@
 -- Regtech Cybersecurity Decision Tool — normalized schema (SQLite)
 -- Core entities: risk, innovation, mitigation, regulation, sector, source
 -- Junction tables express all many-to-many relationships.
--- Populated so far: risk, innovation, source, risk_innovation, risk_source,
--- innovation_source (from Chapters 1-2). mitigation/regulation/sector and
--- their junctions are schema-only, ready for Chapter 11 and the curated
--- regulation overlay.
+-- Populated so far: risk, innovation, risk_innovation (Chapters 1-2);
+-- mitigation, risk_mitigation, mitigation_barrier (Chapter 11); source plus
+-- all *_source junctions (citation numbers only). regulation, sector,
+-- risk_sector, mitigation_regulation and mitigation_innovation are
+-- schema-only, awaiting Appendix G and the curated regulation overlay.
 -- ============================================================
 
 PRAGMA foreign_keys = ON;

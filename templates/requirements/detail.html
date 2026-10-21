@@ -1,0 +1,47 @@
+{% extends "base.html" %}{% load tracker %}
+{% block content %}
+<p><a href="/requirements/">← Requirements</a></p>
+<h1>{{ s.requirement.citation }}</h1>
+<p>{{ s.requirement.short_title }}</p>
+<p class="hint">Short title written by {{ product_name }}; the official text governs. <a href="{{ s.requirement.official_url }}" rel="noopener noreferrer">Official text ↗</a>{% if s.requirement.pending_oj_check %} · Citation pending Official Journal check.{% endif %}</p>
+<p>Set: {{ s.requirement.requirement_set.title }} · Source: {{ s.requirement.requirement_set.source_citation }}</p>
+{% if s.carried_forward_from %}<p class="banner">Carried forward from {{ s.carried_forward_from.label }} on {{ s.carried_forward_at|date:"j M Y" }}.</p>{% endif %}
+
+<section class="panel" aria-labelledby="status-h">
+  <h2 id="status-h">Status</h2>
+  <p>Current: {% chip s.display_status %}{% if s.review_by %} · review by {{ s.review_by|date:"j M Y" }}{% endif %}{% if s.updated_by %} · last changed by {{ s.updated_by.display_name }}, {% local_only s.updated_at %}{% endif %}</p>
+  {% if s.status == "not_applicable" %}<p>Rationale (visible to your customers): {{ s.rationale }}</p>{% endif %}
+  <form method="post">{% csrf_token %}
+    {% if form.non_field_errors %}<div class="error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+    {{ form.as_div }}
+    <p class="hint">“Evidence stale” is set by the system when the review-by date passes. It can't be chosen here.</p>
+    <p><button class="primary" type="submit">Save status</button></p>
+  </form>
+</section>
+
+<section class="panel" aria-labelledby="ev-h">
+  <h2 id="ev-h">Evidence items</h2>
+  <p class="hint">Titles, types and dates are visible to your customers. Files and links are not.</p>
+  {% if evidence %}
+  <table><thead><tr><th scope="col">Title</th><th scope="col">Type</th><th scope="col">Date of evidence</th><th scope="col">Link</th><th scope="col">Added by</th></tr></thead><tbody>
+  {% for e in evidence %}<tr><td>{{ e.title }}</td><td>{{ e.get_type_display }}</td><td>{{ e.evidence_date|date:"j M Y" }}</td><td>{% if e.url %}<a href="{{ e.url }}" rel="noopener noreferrer">Link ↗</a>{% else %}–{% endif %}</td><td>{{ e.added_by.display_name }}, {% local_only e.added_at %}</td></tr>{% endfor %}
+  </tbody></table>
+  {% else %}<p>No evidence items recorded here.</p>{% endif %}
+  <form method="post" action="/requirements/{{ s.pk }}/evidence">{% csrf_token %}
+    <h3>Add an evidence item</h3>
+    {{ evidence_form.as_div }}
+    <p><button type="submit">Add evidence item</button></p>
+  </form>
+</section>
+
+<section class="panel" aria-labelledby="links-h">
+  <h2 id="links-h">Linked AI risks</h2>
+  <p class="hint">Linked for reference. Does not change this requirement's status.</p>
+  {% if links %}<ul>{% for l in links %}<li><a href="/ai-risks/{{ l.ai_risk.pk }}/">{{ l.ai_risk.name }}</a> · {% chip l.ai_risk.display_stage %}</li>{% endfor %}</ul>{% else %}<p>No AI risks linked.</p>{% endif %}
+</section>
+
+<section aria-labelledby="hist-h">
+  <h2 id="hist-h">History</h2>
+  {% if history %}<ul>{% for h in history %}<li>{% local_only h.created_at %} · {{ h.actor_name }} · {{ h.action }}{% if h.old_value %} · from {{ h.old_value.status|status_label }}{% endif %}{% if h.new_value.status %} to {{ h.new_value.status|status_label }}{% endif %}{% if h.reason %} · note: {{ h.reason }}{% endif %}</li>{% endfor %}</ul>{% else %}<p>No changes recorded.</p>{% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Sign in – {{ product_name }}{% endblock %}
+{% block content %}
+<h1>Sign in</h1>
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+<p>Sign in with your organisation's account. Multi-factor authentication is required.</p>
+<p><a class="button primary" href="/oidc/authenticate/">Sign in</a></p>
+{% if dev_login %}<p class="hint">Development only: <a href="/dev/login/">sign in as a seeded user</a>.</p>{% endif %}
+{% endblock %}

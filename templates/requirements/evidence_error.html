@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ s.requirement.citation }}</h1>
+<p class="error" role="alert">Not saved. The evidence item was not recorded.</p>
+<form method="post" action="/requirements/{{ s.pk }}/evidence">{% csrf_token %}
+{{ form.as_div }}
+<p><button class="primary" type="submit">Add evidence item</button> <a href="/requirements/{{ s.pk }}/">Cancel</a></p>
+</form>
+{% endblock %}

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{% if ev.is_drill %}DRILL {% endif %}{{ ev.ref }} · Details</h1>
+<p class="hint">Restricted to incident responders. Changes are recorded in the audit trail.</p>
+<form method="post">{% csrf_token %}
+  {{ form.as_div }}
+  <p><button class="primary" type="submit">Save details</button> <a href="/events/{{ ev.pk }}/">Cancel</a></p>
+</form>
+{% endblock %}

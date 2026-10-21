@@ -1,0 +1,40 @@
+# Context references (no status)
+#
+# PLACEHOLDER CONTENT. The requirement rows (short titles, final citations, any
+# split of paragraphs) are a CPO/legal deliverable due 2026-10-30
+# (docs/critical-path.md item 1). Engineering has only created the structure:
+# real citation identifiers, a stable ID per row, an EUR-Lex link, and
+# pending_oj_check: true on every row. Short titles are deliberately
+# "DRAFT – pending legal review" until legal provides them.
+#
+# Row schema (validated by apps/catalog/loader.py):
+#   id               stable ID, never reused
+#   citation         design spec 15.3 format, e.g. "CRA Annex I, Part I(2)(a)"
+#   short_title      under ~10 words, neutral, never "compliant" (copy-lint checks it)
+#   official_url     EUR-Lex link to the Official Journal text
+#   pending_oj_check true until checked against the OJ text
+#   context_only     optional; true = shown as context, no status
+#   attack_class     optional; Art. 15(5) split (data_poisoning, model_poisoning,
+#                    adversarial_examples, confidentiality_attacks, model_flaws)
+
+kind: requirement_set
+schema_version: 1
+code: context_references
+title: "Context references (no status)"
+source_citation: "Regulation (EU) 2024/2847"
+official_url: "https://eur-lex.europa.eu/eli/reg/2024/2847/oj"
+draft: true
+sort_order: 4
+requirements:
+  - id: CTX-CRA-12
+    citation: "CRA Art. 12"
+    short_title: "DRAFT – pending legal review"
+    official_url: "https://eur-lex.europa.eu/eli/reg/2024/2847/oj"
+    pending_oj_check: true
+    context_only: true
+  - id: CTX-CRA-R51
+    citation: "CRA Recital 51 (context, not binding)"
+    short_title: "DRAFT – pending legal review"
+    official_url: "https://eur-lex.europa.eu/eli/reg/2024/2847/oj"
+    pending_oj_check: true
+    context_only: true

@@ -1,0 +1,55 @@
+{% extends "base.html" %}{% load tracker %}
+{% block content %}
+{% if not version %}
+<h1>Requirements</h1>
+<p>No requirement set is attached to this version. <a href="/setup/">Add a product and a version</a>.</p>
+{% else %}
+<h1>Requirements · {{ version.product.name }} {{ version.label }}</h1>
+<p>Annex III category: {{ version.product.category.citation }} (selected by vendor)</p>
+<section class="panel" aria-labelledby="sum-h">
+  <h2 id="sum-h">Summary</h2>
+  <p>Evidence attached for {{ summary.attached }} of {{ summary.total }} requirements.</p>
+  <p>Breakdown: {% for label, n in summary.breakdown %}{{ n }} {{ label }}{% if not forloop.last %} · {% endif %}{% endfor %}</p>
+  <p class="hint">This is a count of records entered here. It is not a score.</p>
+</section>
+<form method="get" aria-label="Filter requirements">
+  <label for="f-status">Status</label>
+  <select id="f-status" name="status"><option value="">All statuses</option>{% for v, l in status_filters %}<option value="{{ v }}"{% if f_status == v %} selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+  <label for="f-set">Requirement set</label>
+  <select id="f-set" name="set"><option value="">All sets</option>{% for rs in sets %}<option value="{{ rs.code }}"{% if f_set == rs.code %} selected{% endif %}>{{ rs.title }}</option>{% endfor %}</select>
+  <label for="f-q">Search</label>
+  <input id="f-q" name="q" value="{{ q }}">
+  <button type="submit">Apply filters</button>
+</form>
+{% for rs, items in groups %}
+<section aria-labelledby="set-{{ rs.code }}">
+  <h2 id="set-{{ rs.code }}">{{ rs.title }}{% if rs.draft %} <span class="chip">DRAFT – pending legal review</span>{% endif %}</h2>
+  <p>Source: {{ rs.source_citation }} <a href="{{ rs.official_url }}" rel="noopener noreferrer">Official text ↗</a></p>
+  {% if rs.context_note %}<p class="hint">{{ rs.context_note }}</p>{% endif %}
+  <table class="cards">
+    <thead><tr><th scope="col">Citation</th><th scope="col">Requirement (short title)</th><th scope="col">Status</th><th scope="col">Review by</th><th scope="col">Linked AI risks</th></tr></thead>
+    <tbody>
+    {% for s in items %}
+      <tr>
+        <td data-label="Citation"><a href="/requirements/{{ s.pk }}/">{{ s.requirement.citation }}</a>{% if s.requirement.pending_oj_check %} <span class="hint">pending Official Journal check</span>{% endif %}</td>
+        <td data-label="Requirement">{{ s.requirement.short_title }}</td>
+        <td data-label="Status">{% chip s.display_status %}</td>
+        <td data-label="Review by">{{ s.review_by|date:"d M Y"|default:"–" }}</td>
+        <td data-label="Linked AI risks">{{ links|get_item:s.requirement_id|default:0 }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% empty %}
+<p>No requirements match these filters.</p>
+{% endfor %}
+{% if context_rows %}
+<section aria-labelledby="ctx-h">
+  <h2 id="ctx-h">Context (no status)</h2>
+  <ul>{% for r in context_rows %}<li>{{ r.citation }} · {{ r.short_title }} <a href="{{ r.official_url }}" rel="noopener noreferrer">Official text ↗</a></li>{% endfor %}</ul>
+  <p class="hint">AI Act Art. 15 statuses are not derived from CRA statuses. This tool does not apply any presumption for you.</p>
+</section>
+{% endif %}
+{% endif %}
+{% endblock %}

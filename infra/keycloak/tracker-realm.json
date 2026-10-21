@@ -1,0 +1,46 @@
+{
+  "realm": "tracker",
+  "enabled": true,
+  "displayName": "Tracker",
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "failureFactor": 5,
+  "ssoSessionIdleTimeout": 28800,
+  "ssoSessionMaxLifespan": 86400,
+  "otpPolicyType": "totp",
+  "otpPolicyAlgorithm": "HmacSHA256",
+  "otpPolicyDigits": 6,
+  "otpPolicyPeriod": 30,
+  "webAuthnPolicyPasswordlessUserVerificationRequirement": "required",
+  "requiredActions": [
+    {"alias": "CONFIGURE_TOTP", "name": "Configure OTP", "providerId": "CONFIGURE_TOTP", "enabled": true, "defaultAction": true, "priority": 10},
+    {"alias": "webauthn-register-passwordless", "name": "Webauthn Register Passwordless", "providerId": "webauthn-register-passwordless", "enabled": true, "defaultAction": false, "priority": 20}
+  ],
+  "clients": [
+    {
+      "clientId": "tracker",
+      "name": "Tracker",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["http://localhost:8000/oidc/callback/"],
+      "webOrigins": ["http://localhost:8000"],
+      "attributes": {"pkce.code.challenge.method": "S256", "post.logout.redirect.uris": "http://localhost:8000/signed-out/"},
+      "protocolMappers": [
+        {"name": "amr", "protocol": "openid-connect", "protocolMapper": "oidc-amr-mapper", "consentRequired": false,
+         "config": {"id.token.claim": "true", "access.token.claim": "true", "introspection.token.claim": "true"}}
+      ]
+    }
+  ],
+  "smtpServer": {},
+  "_comment": "MFA: every user must configure TOTP on first sign-in (default required action); passkeys allowed; no SMS. The amr mapper lets the app refuse sign-ins without MFA. Untested in the build environment: validate amr values in staging."
+}

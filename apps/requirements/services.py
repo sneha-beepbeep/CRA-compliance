@@ -49,7 +49,8 @@ def change_status(request, status_id, *, status: str, review_by=None, rationale:
     old = {"status": s.display_status, "review_by": s.review_by, "rationale": s.rationale}
     s.status = status
     s.review_by = review_by if status == "evidence_attached" else (review_by or s.review_by)
-    s.rationale = rationale.strip() if status == "not_applicable" else s.rationale
+    # QA-12: the customer-visible rationale only exists while the status is N/A (history stays in the audit).
+    s.rationale = rationale.strip() if status == "not_applicable" else ""
     s.updated_by, s.updated_at = request.user, clock.now()
     s.row_version += 1
     s.carried_forward_from = None

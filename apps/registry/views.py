@@ -1,4 +1,6 @@
 """S-14 products, versions, deployments (setup) and version selection."""
+import uuid
+
 from django import forms
 from django.contrib import messages
 from django.http import Http404
@@ -122,7 +124,10 @@ def add_deployment(request):
 @requires(Capability.VENDOR_OVERVIEW)
 @require_POST
 def select_version(request):
-    v = ProductVersion.objects.filter(pk=request.POST.get("version", "")).first()
+    try:  # QA-07: malformed IDs are a 404, not a 500
+        v = ProductVersion.objects.filter(pk=uuid.UUID(request.POST.get("version", ""))).first()
+    except ValueError:
+        v = None
     if v is None:
         raise Http404
     request.session["version_id"] = str(v.pk)

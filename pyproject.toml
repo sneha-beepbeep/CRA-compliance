@@ -24,6 +24,9 @@ dev = [
 # Opt-in: PostgreSQL 16 binaries in the venv for local tests without Docker
 # (scripts/localpg.sh). Not used in CI or production.
 localpg = ["pgserver>=0.1.4"]
+# Browser tests (tests/e2e, tests/a11y/test_axe.py). Browsers download to
+# PLAYWRIGHT_BROWSERS_PATH (CI: default cache; locally: .playwright/).
+browser = ["playwright>=1.48", "axe-playwright-python>=0.1.4"]
 
 [tool.uv]
 package = false
@@ -34,4 +37,5 @@ testpaths = ["tests"]
 addopts = "-ra --strict-markers"
 markers = [
     "postgres: needs a real PostgreSQL 16 database (set DATABASE_URL); skipped otherwise",
+    "browser: needs Playwright + Chromium (uv sync --group browser; playwright install chromium)",
 ]

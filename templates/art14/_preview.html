@@ -1,17 +1,18 @@
 {% load tracker %}<section id="preview" class="panel" aria-labelledby="preview-h" aria-live="polite">
   <h2 id="preview-h">Deadlines this will create</h2>
   {% if preview %}
-  <table>
+  <table class="cards">
     <thead><tr><th scope="col">Deadline</th><th scope="col">Due</th><th scope="col">Time left</th></tr></thead>
     <tbody>
-      <tr><th scope="row">Early warning (24h)</th><td>{% dual preview.early_warning.due_at %}</td><td>{% countdown preview.early_warning.due_at %}</td></tr>
-      <tr><th scope="row">Notification (72h)</th><td>{% dual preview.notification.due_at %}</td><td>{% countdown preview.notification.due_at %}</td></tr>
+      <tr><th scope="row">Early warning (24h)</th><td data-label="Due">{% dual preview.early_warning.due_at %}</td><td data-label="Time left">{% countdown preview.early_warning.due_at %}</td></tr>
+      <tr><th scope="row">Notification (72h)</th><td data-label="Due">{% dual preview.notification.due_at %}</td><td data-label="Time left">{% countdown preview.notification.due_at %}</td></tr>
       <tr><th scope="row">Final report</th><td colspan="2">{% if form.cleaned_data.event_type == "vulnerability" %}Starts when a fix or mitigation is recorded.{% else %}Starts when the notification filing time is recorded.{% endif %}</td></tr>
     </tbody>
   </table>
   {% if dst_note %}<p class="hint">ⓘ {{ dst_note }}</p>{% endif %}
   <p class="hint">Calendar hours. Weekends and holidays are not excluded.</p>
-  {% if stale_warning %}<p class="error">{{ stale_warning }}</p>{% endif %}
+  {% if stale_warning %}<p class="error" role="alert">{{ stale_warning }}</p>
+  <p><label class="inline"><input type="checkbox" name="acknowledge_overdue" value="1"> I understand the early warning deadline has already passed.</label></p>{% endif %}
   {% else %}
   <p>Enter the event type and awareness time to see the deadlines.</p>
   {% endif %}

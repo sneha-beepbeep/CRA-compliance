@@ -66,5 +66,6 @@ BEGIN
     RETURN NULL;
 END $$;
 
-REVOKE ALL ON FUNCTION audit_verify_chain(uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION audit_verify_chain(uuid) TO app_vendor;
+-- QA-09: operator-only (manage.py verify_audit_chain). Vendor sessions can't call it
+-- for arbitrary tenant IDs.
+REVOKE ALL ON FUNCTION audit_verify_chain(uuid) FROM PUBLIC, app_vendor, app_customer, app_auth;

@@ -42,7 +42,7 @@ def seed_vendor(key: str, legal_name: str, now: datetime | None = None) -> Vendo
     mk = UserAccount.objects.create_user
     manager = mk(f"responder@{key}.example", vendor, f"Tomasz {key.title()}", is_access_manager=True,
                  time_zone="Europe/Warsaw", time_zone_confirmed=True)
-    admin = mk(f"admin@{key}.example", vendor, f"Lena {key.title()}", time_zone="Europe/Berlin")
+    admin = mk(f"admin@{key}.example", vendor, f"Lena {key.title()}")  # UTC, unconfirmed: sees the banner
     RoleGrant.objects.create(vendor_tenant=vendor, user=manager, role=RoleGrant.Role.INCIDENT_RESPONDER,
                              granted_at=now)
     customer = Tenant(kind=Tenant.Kind.CUSTOMER, vendor_tenant=vendor, legal_name=f"Customer of {key}",

@@ -22,12 +22,19 @@ class TrackerOIDCBackend(OIDCAuthenticationBackend):
     def verify_claims(self, claims):
         return bool(claims.get("sub")) and super().verify_claims(claims)
 
+    def _refuse(self, reason: str):
+        if self.request is not None and hasattr(self.request, "session"):
+            self.request.session["signin_error"] = reason  # shown once on S-0 (QA-11)
+        return None
+
     def get_or_create_user(self, access_token, id_token, payload):
         amr = set(payload.get("amr") or [])
         if not amr & MFA_AMR:
-            return None  # S-0: "MFA not set up" -> blocked
+            return self._refuse("mfa")  # S-0: "MFA not set up" -> blocked
         user = super().get_or_create_user(access_token, id_token, payload)
-        if user is not None and self.request is not None:
+        if user is None:
+            return self._refuse("no_account")
+        if self.request is not None:
             record_auth_time(self.request, payload.get("auth_time"))
         return user
 

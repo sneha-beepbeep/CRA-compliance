@@ -103,3 +103,62 @@ def test_dev_login_not_routed_without_flag():
     from django.urls import Resolver404, resolve
     with pytest.raises(Resolver404):
         resolve("/dev/login/")
+
+
+# QA-11: S-0 sign-in error states
+class _Req:
+    def __init__(self):
+        self.session = {}
+
+
+def test_mfa_refusal_is_explained():
+    b = TrackerOIDCBackend.__new__(TrackerOIDCBackend)
+    b.request = _Req()
+    assert b.get_or_create_user("a", "i", {"sub": "x", "amr": ["pwd"]}) is None
+    assert b.request.session["signin_error"] == "mfa"
+
+
+def test_failure_redirect_lands_on_sign_in():
+    from django.conf import settings
+    assert settings.LOGIN_REDIRECT_URL_FAILURE == "/sign-in/?error=1"
+
+
+@pytest.mark.parametrize("reason,text", [("mfa", "authenticator app or a passkey"),
+                                         ("no_account", "You don't have access to this workspace."),
+                                         ("failed", "Sign-in didn't complete. Contact your administrator.")])
+def test_sign_in_page_messages(reason, text):
+    from django.contrib.auth.models import AnonymousUser
+    from django.contrib.sessions.backends.signed_cookies import SessionStore
+
+    from apps.identity.views import sign_in
+    r = RequestFactory().get("/sign-in/?error=1" if reason == "failed" else "/sign-in/")
+    r.user, r.session, r.tenant_ctx = AnonymousUser(), SessionStore(), None
+    if reason != "failed":
+        r.session["signin_error"] = reason
+    body = sign_in(r).content.decode()
+    assert text in body.replace("&#x27;", "'")
+    assert "signin_error" not in r.session  # shown once
+
+
+# Option D: server-side zone validation and the no-network banner script
+def test_valid_zone_against_iana_list():
+    from apps.tenancy.services import valid_zone
+    assert valid_zone("Europe/Warsaw") == "Europe/Warsaw" and valid_zone("UTC") == "UTC"
+    for bad in (None, "", "Mars/Olympus", "../etc/passwd", "europe/warsaw"):
+        assert valid_zone(bad) is None
+
+
+def test_banner_form_choices_are_iana():
+    from zoneinfo import available_timezones
+
+    from apps.tenancy.views import ConfirmTimeZoneForm
+    choices = {v for v, _ in ConfirmTimeZoneForm().fields["time_zone"].choices}
+    assert "UTC" in choices and "Europe/Warsaw" in choices and choices <= available_timezones()
+
+
+def test_timezone_js_makes_no_requests_and_uses_intl():
+    from pathlib import Path
+    js = (Path(__file__).resolve().parents[2] / "static" / "js" / "timezone.js").read_text()
+    assert "Intl.DateTimeFormat().resolvedOptions().timeZone" in js
+    for forbidden in ("fetch(", "XMLHttpRequest", "htmx", "eval(", "submit()"):
+        assert forbidden not in js

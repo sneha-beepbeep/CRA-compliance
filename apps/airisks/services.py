@@ -77,7 +77,7 @@ def change_stage(request, risk_id, *, stage, planned_treatment="", rationale="",
     old = {"stage": r.display_stage, "owner": r.owner.display_name if r.owner else None}
     r.stage = stage
     r.planned_treatment = planned_treatment.strip() or r.planned_treatment
-    r.rationale = rationale.strip() if stage in ("accepted", "not_applicable") else r.rationale
+    r.rationale = rationale.strip() if stage in ("accepted", "not_applicable") else ""  # QA-12
     r.review_by = review_by or r.review_by
     r.owner = owner
     r.updated_by, r.updated_at = request.user, clock.now()

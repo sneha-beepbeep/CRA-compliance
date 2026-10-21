@@ -20,7 +20,9 @@ SELECT d.id AS deployment_id, r.id AS requirement_id, rs.title AS requirement_se
        r.short_title, r.official_url,
        CASE WHEN s.status = 'evidence_attached' AND s.review_by < (now() AT TIME ZONE 'UTC')::date
             THEN 'evidence_stale' ELSE s.status END AS status,
-       s.review_by, s.rationale, s.updated_at AS last_changed_at, s.id AS status_id
+       s.review_by,
+       CASE WHEN s.status = 'not_applicable' THEN s.rationale END AS rationale,  -- QA-12
+       s.updated_at AS last_changed_at, s.id AS status_id
 FROM deployment d
 JOIN requirement_status s ON s.version_id = d.version_id
 JOIN requirement r ON r.id = s.requirement_id
@@ -42,7 +44,8 @@ SELECT d.id AS deployment_id, a.id AS ai_risk_id, a.name, a.attack_class,
             THEN 'evidence_stale' ELSE a.stage END AS stage,
        (SELECT max(e.evidence_date) FROM evidence_item e
          WHERE e.ai_risk_id = a.id AND e.type = 'test_report') AS last_tested,
-       a.last_reviewed_on, (a.owner_id IS NOT NULL) AS owner_assigned, a.rationale
+       a.last_reviewed_on, (a.owner_id IS NOT NULL) AS owner_assigned,
+       CASE WHEN a.stage IN ('accepted', 'not_applicable') THEN a.rationale END AS rationale  -- QA-12
 FROM deployment d
 JOIN ai_risk a ON a.version_id = d.version_id
 WHERE d.customer_tenant_id = app_current_tenant();

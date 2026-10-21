@@ -26,11 +26,21 @@ def revoke_responder(request, user: UserAccount):
         record(request, area="users", action="revoked_responder", target=user, target_label=user.display_name)
 
 
+def valid_zone(tz_name: str | None) -> str | None:
+    """Server-side check against the IANA list shipped with tzdata/zoneinfo."""
+    from zoneinfo import available_timezones
+    return tz_name if tz_name and tz_name in available_timezones() else None
+
+
 @transaction.atomic
-def set_time_zone(request, tz_name: str):
-    from apps.art14.localtime import get_zone
-    get_zone(tz_name)
-    old = request.user.time_zone
-    UserAccount.objects.filter(pk=request.user.pk).update(time_zone=tz_name, time_zone_confirmed=True)
-    record(request, area="users", action="set_time_zone", target=request.user, target_label=request.user.display_name,
-           old={"time_zone": old}, new={"time_zone": tz_name})
+def set_time_zone(request, tz_name: str, *, detected: str | None = None, via: str = "profile"):
+    """Set and confirm the display zone. Audited; display only (the deadline engine stays UTC)."""
+    if valid_zone(tz_name) is None:
+        raise ValueError(f"unknown time zone {tz_name!r}")
+    old, was_confirmed = request.user.time_zone, request.user.time_zone_confirmed
+    UserAccount.objects.filter(pk=request.user.pk).update(time_zone=tz_name, time_zone_confirmed=True,
+                                                         time_zone_confirmed_at=clock.now())
+    action = "confirmed_time_zone" if via == "banner" else "set_time_zone"
+    record(request, area="users", action=action, target=request.user, target_label=request.user.display_name,
+           old={"time_zone": old, "confirmed": was_confirmed},
+           new={"time_zone": tz_name, "browser_detected": valid_zone(detected)})

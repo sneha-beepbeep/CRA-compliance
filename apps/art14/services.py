@@ -28,6 +28,15 @@ class ConflictError(EventError):
     pass
 
 
+REOPEN_FIRST = "This event is closed. Reopen the event first."
+
+
+def _require_open(ev: Art14Event) -> None:
+    """QA-02: a closed event's record can't change without reopening (also enforced by a trigger)."""
+    if ev.status != Art14Event.Status.OPEN:
+        raise EventError(REOPEN_FIRST)
+
+
 def month_rule() -> str:
     return SystemSetting.get("month_rule")
 
@@ -120,6 +129,7 @@ def record_time(request, event_id, *, which: str, when: datetime, reason: str = 
     field = {"early_warning": "early_warning_filed_at", "notification": "notification_filed_at",
              "final_report": "final_report_filed_at", "fix": "fix_available_at"}[which]
     ev = _locked(event_id, row_version)
+    _require_open(ev)
     when = _minute(when)
     if when > clock.now() + timedelta(seconds=60):
         raise EventError("This time can't be in the future.", "when")
@@ -147,6 +157,7 @@ def edit_awareness(request, event_id, *, new_awareness: datetime, reason: str, r
     if len(reason.strip()) < REASON_MIN:
         raise EventError(f"Give a reason (at least {REASON_MIN} characters).", "reason")
     ev = _locked(event_id, row_version)
+    _require_open(ev)
     new_awareness = _minute(new_awareness)
     if new_awareness > clock.now() + timedelta(seconds=60):
         raise EventError("Awareness time can't be in the future.", "awareness")
@@ -178,7 +189,8 @@ def close_event(request, event_id, *, outcome: str, rationale: str = "", row_ver
     else:
         raise EventError("Choose how to close the event.", "outcome")
     ev.status, ev.closed_at, ev.close_rationale = outcome, clock.now(), rationale.strip()
-    _save(ev, ["status", "closed_at", "close_rationale"])
+    ev.awaiting_responder = False
+    _save(ev, ["status", "closed_at", "close_rationale", "awaiting_responder"])
     record(request, area="art14", action="closed_event", target=ev, target_label=_event_label(ev),
            new={"status": outcome}, reason=rationale, incident_detail=True, drill=ev.is_drill)
     return ev
@@ -202,6 +214,7 @@ def reopen_event(request, event_id, *, reason: str, row_version: int) -> Art14Ev
 @transaction.atomic
 def reassign(request, event_id, *, assignee: UserAccount, take_over: bool = False) -> Art14Event:
     ev = _locked(event_id, None)
+    _require_open(ev)
     if not is_responder(assignee.pk):
         raise EventError("Choose an incident responder.", "assignee")
     old = ev.assigned_responder.display_name
@@ -217,7 +230,8 @@ def reassign(request, event_id, *, assignee: UserAccount, take_over: bool = Fals
 def record_detail_view(request, ev: Art14Event) -> None:
     """Every view of incident details is audited (NFR-3); the assigned responder's
     first view clears the awaiting-responder flag (8.3a)."""
-    if ev.awaiting_responder and str(ev.assigned_responder_id) == str(request.user.pk):
+    if (ev.awaiting_responder and ev.status == Art14Event.Status.OPEN
+            and str(ev.assigned_responder_id) == str(request.user.pk)):
         Art14Event.objects.filter(pk=ev.pk).update(awaiting_responder=False)
         ev.awaiting_responder = False
     record(request, area="art14", action="viewed_details", target=ev, target_label=_event_label(ev),
@@ -227,6 +241,8 @@ def record_detail_view(request, ev: Art14Event) -> None:
 @transaction.atomic
 def update_details(request, ev: Art14Event, *, title: str, description: str, component: str, vector: str,
                    version=None, deployments=()):
+    ev = _locked(ev.pk, None)
+    _require_open(ev)
     detail, _ = Art14EventDetail.objects.get_or_create(event=ev, defaults={"vendor_tenant_id": ev.vendor_tenant_id})
     old = {"title": detail.title, "description": detail.description, "component": detail.affected_component,
            "vector": detail.vector, "version": ev.product_version.label if ev.product_version else None,
@@ -255,7 +271,7 @@ def record_drill_outcome(request, ev: Art14Event, *, answer: str, notes: str) ->
                                       early_warning_would_be_met=answer, notes=notes,
                                       recorded_by=request.user, recorded_at=clock.now())
     record(request, area="art14", action="recorded_drill_outcome", target=ev, target_label=_event_label(ev),
-           new={"early_warning_would_be_met": answer, "notes": notes}, drill=True)
+           new={"early_warning_would_be_met": answer, "notes": notes}, incident_detail=True, drill=True)
     return out
 
 

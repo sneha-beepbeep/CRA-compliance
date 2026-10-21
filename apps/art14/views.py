@@ -24,18 +24,29 @@ def _event(pk) -> Art14Event:
     return ev
 
 
+def _closed_redirect(request, ev):
+    """GET of an edit screen for a closed event: send the user back (QA-02)."""
+    if request.method == "GET" and ev.status != Art14Event.Status.OPEN:
+        messages.error(request, services.REOPEN_FIRST)
+        return redirect(f"/events/{ev.pk}/")
+    return None
+
+
 def _responder_qs(request):
     ids = [u.pk for u in services.responders(request.tenant_ctx.vendor_tenant_id)]
     return UserAccount.objects.filter(pk__in=ids).order_by("display_name")
 
 
 def _preview(form, rule):
-    """Deadline preview while typing (S-8); computed server-side from the authoritative engine."""
-    if not form.is_bound or not form.is_valid() or not form.cleaned_data.get("awareness_at"):
+    """Deadline preview while typing (S-8, S-8a; QA-06). Needs only the event type and
+    a valid awareness time; the rest of the form may still be incomplete."""
+    if not form.is_bound:
         return None
-    aw = form.cleaned_data["awareness_at"]
-    d = engine.compute(engine.EventTimes(form.cleaned_data["event_type"], aw), clock.now(), rule)
-    return d
+    form.is_valid()  # populates cleaned_data for every field that is valid; clean() derives awareness_at
+    et, aw = form.cleaned_data.get("event_type"), form.cleaned_data.get("awareness_at")
+    if not (et and aw):
+        return None
+    return engine.compute(engine.EventTimes(et, aw), clock.now(), rule)
 
 
 @requires(Capability.ART14_CLOCKS_VIEW)
@@ -78,8 +89,14 @@ def _create(request, form_cls, template, via, drill):
     form = form_cls(request.POST or None, initial={"assignee": request.user.pk if form_cls is LogEventForm else None},
                     **kw)
     preview = _preview(form, services.month_rule())
+    overdue_unacknowledged = (preview is not None and preview.early_warning.state is engine.State.OVERDUE
+                              and request.POST.get("acknowledge_overdue") != "1")
+    if (request.method == "POST" and request.POST.get("action") == "save" and overdue_unacknowledged
+            and form.is_valid()):
+        form.add_error(None, "The early warning deadline for this time has already passed. Tick the box "
+                             "under the deadlines to confirm, then log again.")
     if request.method == "POST" and form.is_valid() and form.cleaned_data.get("awareness_at") \
-            and request.POST.get("action") == "save":
+            and request.POST.get("action") == "save" and not overdue_unacknowledged:
         cd = form.cleaned_data
         is_drill = drill or bool(cd.get("is_drill"))
         try:
@@ -182,6 +199,8 @@ def record_time(request, pk):
 @require_http_methods(["GET", "POST"])
 def edit_details(request, pk):
     ev = _event(pk)
+    if (r := _closed_redirect(request, ev)) is not None:
+        return r
     detail_obj = getattr(ev, "detail", None) if hasattr(ev, "detail") else None
     kw = {"versions": ProductVersion.objects.filter(product=ev.product), "deployments": Deployment.objects.filter(product=ev.product)}
     initial = {"version": ev.product_version_id,
@@ -192,18 +211,24 @@ def edit_details(request, pk):
     form = DetailsForm(request.POST or None, initial=initial, **kw)
     if request.method == "POST" and form.is_valid():
         cd = form.cleaned_data
-        services.update_details(request, ev, title=cd["title"], description=cd["description"],
-                                component=cd["affected_component"], vector=cd["vector"], version=cd["version"],
-                                deployments=list(cd["deployments"]))
-        messages.info(request, "Details saved.")
-        return redirect(f"/events/{ev.pk}/")
-    return render(request, "art14/edit_details.html", {"ev": ev, "form": form})
+        try:
+            services.update_details(request, ev, title=cd["title"], description=cd["description"],
+                                    component=cd["affected_component"], vector=cd["vector"], version=cd["version"],
+                                    deployments=list(cd["deployments"]))
+            messages.info(request, "Details saved.")
+            return redirect(f"/events/{ev.pk}/")
+        except services.EventError as e:
+            form.add_error(None, e.message)
+    status = 400 if request.method == "POST" else 200
+    return render(request, "art14/edit_details.html", {"ev": ev, "form": form}, status=status)
 
 
 @requires(Capability.ART14_AWARENESS_EDIT)
 @require_http_methods(["GET", "POST"])
 def edit_awareness(request, pk):
     ev = _event(pk)
+    if (r := _closed_redirect(request, ev)) is not None:
+        return r
     form = AwarenessEditForm(request.POST or None, initial={"row_version": ev.row_version},
                              user_tz=request.user.time_zone)
     changes = None
@@ -257,7 +282,10 @@ def reopen(request, pk):
 @require_POST
 def take_over(request, pk):
     ev = _event(pk)
-    services.reassign(request, ev.pk, assignee=request.user, take_over=True)
+    try:
+        services.reassign(request, ev.pk, assignee=request.user, take_over=True)
+    except services.EventError as e:
+        messages.error(request, e.message)
     return redirect(f"/events/{ev.pk}/")
 
 
@@ -265,13 +293,19 @@ def take_over(request, pk):
 @require_http_methods(["GET", "POST"])
 def reassign(request, pk):
     ev = _event(pk)
+    if (r := _closed_redirect(request, ev)) is not None:
+        return r
     form = ReassignForm(request.POST or None, responders=_responder_qs(request))
     if request.method == "POST" and form.is_valid():
-        services.reassign(request, ev.pk, assignee=form.cleaned_data["assignee"])
-        messages.info(request, f"{ev.ref} assigned to {form.cleaned_data['assignee'].display_name}. "
-                               "The dashboard does not notify them.")
-        return redirect("/events/")
-    return render(request, "art14/reassign.html", {"ev": ev, "form": form})
+        try:
+            services.reassign(request, ev.pk, assignee=form.cleaned_data["assignee"])
+            messages.info(request, f"{ev.ref} assigned to {form.cleaned_data['assignee'].display_name}. "
+                                   "The dashboard does not notify them.")
+            return redirect("/events/")
+        except services.EventError as e:
+            form.add_error(None, e.message)
+    status = 400 if request.method == "POST" else 200
+    return render(request, "art14/reassign.html", {"ev": ev, "form": form}, status=status)
 
 
 @requires(Capability.ART14_DRILL)

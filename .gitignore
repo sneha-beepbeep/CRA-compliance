@@ -12,3 +12,4 @@ staticfiles/
 __pycache__/
 .pytest_cache/
 .hypothesis/
+.playwright/

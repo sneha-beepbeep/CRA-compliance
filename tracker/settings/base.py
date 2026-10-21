@@ -137,6 +137,7 @@ OIDC_CREATE_USER = False  # users are provisioned or invited, never self-created
 OIDC_STORE_ID_TOKEN = False
 LOGIN_URL = "/sign-in/"
 LOGIN_REDIRECT_URL = "/"
+LOGIN_REDIRECT_URL_FAILURE = "/sign-in/?error=1"  # QA-11: refused sign-ins land on S-0 with a message
 LOGOUT_REDIRECT_URL = "/signed-out/"
 # Development-only shortcut sign-in; never enabled in prod.py (tested).
 DEV_LOGIN_ENABLED = False

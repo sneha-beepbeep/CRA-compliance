@@ -5,9 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="htmx-config" content='{"includeIndicatorStyles": false, "allowEval": false, "allowScriptTags": false}'>
 <title>{% block title %}{{ tab_title|default:product_name }}{% endblock %}</title>
+<link rel="icon" href="data:,">
 <link rel="stylesheet" href="{% static 'css/app.css' %}">
 <script src="{% static 'django_htmx/htmx-2.min.js' %}" defer></script>
 <script src="{% static 'js/clocks.js' %}" defer></script>
+<script src="{% static 'js/timezone.js' %}" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -31,6 +33,7 @@
   {% endif %}
 </header>
 {% if workspace == "vendor" %}{% include "ui/strip.html" %}{% endif %}
+{% if tz_banner_form %}{% include "ui/timezone_banner.html" %}{% endif %}
 <div class="layout">
   {% if workspace == "vendor" %}
   <nav class="side" aria-label="Main">

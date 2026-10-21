@@ -75,3 +75,32 @@ def test_no_stable_pseudonym():
                   shared_as="organisation", is_incident_detail=False)
     b = render(other, ADMIN, customer_names=NAMES)
     assert a.who == b.who == "Bank A user"
+
+
+# QA-08: readable actions and values
+from apps.audit.render import action_label, readable  # noqa: E402
+
+
+def test_action_labels():
+    assert action_label("edited_awareness_time") == "Edit awareness time"
+    assert action_label("something_new") == "Something new"
+
+
+def test_readable_values_show_local_and_utc():
+    txt = readable({"awareness_at": "2026-10-22T06:05:00Z", "review_by": "2027-06-30", "status": "evidence_attached"},
+                   "Europe/Warsaw")
+    assert txt == ("Awareness time: Thu 22 Oct 2026, 08:05 CEST · 06:05 UTC; Review by: 2027-06-30; "
+                   "Status: evidence attached")
+    assert readable(MASK, "UTC") == MASK and readable(None, "UTC") == ""
+
+
+def test_rendered_entry_masks_readable_text():
+    r = render(entry(), ADMIN, tz="Europe/Warsaw")
+    assert r.old_text == MASK and r.new_text == MASK and r.action_label == "Edit awareness time"
+    r = render(entry(), RESP, tz="Europe/Warsaw")
+    assert "06:35 CEST · 04:35 UTC" in r.new_text
+
+
+def test_drill_outcome_notes_masked_for_non_responders():
+    e = entry(action="recorded_drill_outcome", new_value={"early_warning_would_be_met": "yes", "notes": "free text"})
+    assert render(e, ADMIN).new == MASK

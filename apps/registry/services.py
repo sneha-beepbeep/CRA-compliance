@@ -121,7 +121,7 @@ def setup_checklist(request) -> Checklist:
         Step("Select the Annex III category", products.filter(category__supported=True).exists(), "/setup/"),
         Step("Assign at least one incident responder", bool(responders(ctx.vendor_tenant_id)), "/setup/users/"),
         Step("Add a deployment", Deployment.objects.exists(), "/setup/"),
-        Step("Confirm your time zone", bool(request.user.time_zone_confirmed), "/profile/"),
+        # Time zone is no longer a setup step: each user confirms it once via the shell banner (option D).
     ]
     optional = []
     # Hidden until customer invitations exist (phase 1b); CPO decision 2026-10-21.

@@ -10,11 +10,22 @@ from apps.authz.capabilities import Capability, requires
 from .oidc import record_auth_time
 
 
+SIGNIN_ERRORS = {  # design 14, S-0
+    "failed": "Sign-in didn't complete. Contact your administrator.",
+    "mfa": ("Multi-factor authentication is not set up for your account, so sign-in is blocked. "
+            "Sign in again and set up an authenticator app or a passkey when asked. SMS codes are not "
+            "accepted. If you aren't asked, contact your administrator."),
+    "no_account": "You don't have access to this workspace. Contact your administrator.",
+}
+
+
 @requires(Capability.PUBLIC, db_context_exempt=True)
 def sign_in(request):
     if request.user.is_authenticated:
         return redirect("/")
-    return render(request, "identity/sign_in.html", {"dev_login": settings.DEV_LOGIN_ENABLED})
+    reason = request.session.pop("signin_error", None) or ("failed" if request.GET.get("error") else None)
+    return render(request, "identity/sign_in.html", {"dev_login": settings.DEV_LOGIN_ENABLED,
+                                                     "error": SIGNIN_ERRORS.get(reason)})
 
 
 @requires(Capability.PUBLIC, db_context_exempt=True)

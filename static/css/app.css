@@ -82,3 +82,27 @@ textarea { width: 100%; min-height: 5rem; }
 }
 .inline { display: inline; font-weight: 400; }
 .optional-steps { border-top: 1px dashed var(--rule); margin-top: .75rem; padding-top: .5rem; }
+
+/* QA-04: reflow at 320 px (WCAG 1.4.10). Grid children may shrink below their
+   content's intrinsic width; long words and zone names wrap. */
+.layout > *, main, form, fieldset, details { min-width: 0; }
+main { overflow-wrap: anywhere; }
+select, input, textarea { max-width: 100%; }
+fieldset { border: 1px solid var(--rule); margin: .5rem 0; padding: .5rem; }
+/* QA-05: 24 x 24 px minimum targets (WCAG 2.5.8) for disclosure toggles and radios. */
+summary { min-height: 24px; padding: .3rem 0; cursor: pointer; }
+input[type="radio"], input[type="checkbox"] { min-width: 24px; min-height: 24px; }
+@media (max-width: 40rem) {
+  main { padding: .75rem; }
+  header.top { padding: .5rem .75rem; }
+  .strip { padding: .4rem .75rem; }
+  table:not(.cards) { display: block; overflow-x: auto; }
+}
+@media (max-width: 40rem) {
+  table.cards th[scope="row"] { display: block; border: 0; }
+}
+@media (max-width: 40rem) {
+  .chip { white-space: normal; }
+}
+.tz-banner form { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.tz-banner label { margin-top: 0; }

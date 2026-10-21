@@ -57,8 +57,10 @@ class UserAccount(AbstractBaseUser, TenantScoped):
     is_active = models.BooleanField(default=True)
     # Vendor access managers grant/remove the responder role and invite customers.
     is_access_manager = models.BooleanField(default=False)
-    time_zone = models.CharField(max_length=64, default="Europe/Berlin")
+    # Until the user confirms a zone (one-time banner, option D), times show in UTC.
+    time_zone = models.CharField(max_length=64, default="UTC")
     time_zone_confirmed = models.BooleanField(default=False)
+    time_zone_confirmed_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     USERNAME_FIELD = "email"
@@ -131,7 +133,8 @@ class ActivitySharingSetting(TenantScoped):
 class SystemSetting(models.Model):
     """Global configuration (disclaimer template, month_rule, retention).
 
-    Changed by operators through `manage.py set_system_setting` (audited); no release needed.
+    Changed by operators through `manage.py set_system_setting` (audited in every vendor
+    tenant's trail; see apps/tenancy/settings_admin.py); no release needed.
     """
 
     key = models.CharField(max_length=64, primary_key=True)

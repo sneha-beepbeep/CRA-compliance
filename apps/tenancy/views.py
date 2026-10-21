@@ -44,6 +44,30 @@ class ProfileForm(forms.Form):
     time_zone = forms.ChoiceField(label="Display time zone", choices=ZONE_CHOICES)
 
 
+class ConfirmTimeZoneForm(forms.Form):
+    time_zone = forms.ChoiceField(label="Time zone", choices=ZONE_CHOICES)
+    # Filled by static/js/timezone.js from Intl.DateTimeFormat().resolvedOptions().timeZone; may be empty.
+    detected = forms.CharField(required=False, max_length=64, widget=forms.HiddenInput)
+    next = forms.CharField(required=False, widget=forms.HiddenInput)
+
+
+@requires(Capability.AUTHENTICATED)
+@require_POST
+def confirm_time_zone(request):
+    """One-time banner (option D): confirm the detected zone or choose another. Works without JS."""
+    if request.tenant_ctx.workspace != "vendor":
+        raise Http404  # customer accounts can't write user_account yet (customer workspace is phase 1b)
+    form = ConfirmTimeZoneForm(request.POST)
+    if not form.is_valid() or services.valid_zone(form.cleaned_data["time_zone"]) is None:
+        messages.error(request, "Not saved. Choose a time zone from the list.")
+        return render(request, "tenancy/profile.html", {"form": ProfileForm(initial={"time_zone": request.user.time_zone})},
+                      status=400)
+    services.set_time_zone(request, form.cleaned_data["time_zone"], detected=form.cleaned_data["detected"], via="banner")
+    messages.info(request, f"Times are now shown in {form.cleaned_data['time_zone']} and UTC.")
+    nxt = form.cleaned_data["next"] or "/"
+    return redirect(nxt if nxt.startswith("/") and not nxt.startswith("//") else "/")
+
+
 @requires(Capability.AUTHENTICATED)
 @require_http_methods(["GET", "POST"])
 def profile(request):

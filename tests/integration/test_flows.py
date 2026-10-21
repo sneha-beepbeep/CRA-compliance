@@ -226,8 +226,10 @@ class TestAwarenessEdit:
         assert ev.awareness_at == datetime(2026, 10, 21, 11, 0, tzinfo=UTC) and ev.awareness_edit_count == 1
         responder_audit = c.get("/audit/?action=edited_awareness_time").content.decode()
         admin_audit = client_for(w.admin).get("/audit/?action=edited_awareness_time").content.decode()
-        assert "2026-10-21T11:00:00Z" in responder_audit and "a day earlier" in responder_audit
-        assert "2026-10-21T11:00:00Z" not in admin_audit and "a day earlier" not in admin_audit
+        new_aw = "Awareness time: Wed 21 Oct 2026, 13:00 CEST · 11:00 UTC"  # QA-08: readable, local + UTC
+        assert new_aw in responder_audit and "a day earlier" in responder_audit
+        assert "Edit awareness time" in responder_audit and "edited_awareness_time</td>" not in responder_audit
+        assert "21 Oct 2026, 13:00" not in admin_audit and "a day earlier" not in admin_audit
         assert "Deadlines recalculated by a responder" in client_for(w.admin).get(f"/events/{ev.pk}/").content.decode()
         assert "[value hidden: responders only]" in admin_audit
 
@@ -331,7 +333,8 @@ class TestRegistryAndRoles:
 
 
 class TestSetupChecklist:
-    """Deviation 13: "Invite a customer admin" is optional, hidden until invitations exist."""
+    """Deviation 13: "Invite a customer admin" is optional, hidden until invitations exist.
+    Option D: the per-user time-zone step is gone, so every admin sees the same count."""
 
     def ctx_request(self, w, user):
         from types import SimpleNamespace as NS
@@ -339,16 +342,18 @@ class TestSetupChecklist:
         from apps.tenancy.context import resolve
         return NS(tenant_ctx=resolve(user), user=user)
 
-    def test_complete_with_step_hidden(self, world):
+    def test_complete_with_step_hidden_and_same_for_every_admin(self, world):
         from apps.registry.services import setup_checklist
         w = world["A"]
-        cl = setup_checklist(self.ctx_request(w, w.manager))
-        assert cl.optional == [] and cl.complete and (cl.done_count, cl.total) == (6, 6)
-        assert all("Invite" not in s.label for s in cl.required)
+        for user in (w.manager, w.admin):  # admin hasn't confirmed a time zone: no longer matters
+            cl = setup_checklist(self.ctx_request(w, user))
+            assert cl.optional == [] and cl.complete and (cl.done_count, cl.total) == (5, 5)
+            assert all("Invite" not in s.label and "time zone" not in s.label for s in cl.required)
         c = client_for(w.manager)
         assert "Setup:" not in c.get("/").content.decode()  # panel gone once complete
         setup = c.get("/setup/").content.decode()
         assert "Invite a customer admin" not in setup and "Optional steps" not in setup
+        assert "Confirm your time zone</li>" not in setup
 
     def test_optional_step_never_affects_count(self, world, settings):
         from apps.registry.services import setup_checklist
@@ -357,18 +362,209 @@ class TestSetupChecklist:
         w = world["A"]
         cl = setup_checklist(self.ctx_request(w, w.manager))
         assert [s.label for s in cl.optional] == ["Invite a customer admin"] and not cl.optional[0].done
-        assert cl.complete and (cl.done_count, cl.total) == (6, 6)
+        assert cl.complete and (cl.done_count, cl.total) == (5, 5)
         CustomerInvitation.objects.create(vendor_tenant=w.vendor, customer_tenant=w.customer, email="x@c.example",
                                           invited_by=w.manager, invited_at=NOW)
         cl2 = setup_checklist(self.ctx_request(w, w.manager))
-        assert cl2.optional[0].done and (cl2.done_count, cl2.total) == (6, 6)
+        assert cl2.optional[0].done and (cl2.done_count, cl2.total) == (5, 5)
         # an incomplete required step still counts; the optional one still doesn't
-        cl3 = setup_checklist(self.ctx_request(w, w.admin))  # admin hasn't confirmed a time zone
-        assert (cl3.done_count, cl3.total) == (5, 6) and not cl3.complete
+        RoleGrant.objects.filter(vendor_tenant=w.vendor).update(revoked_at=NOW)
+        cl3 = setup_checklist(self.ctx_request(w, w.manager))
+        assert (cl3.done_count, cl3.total) == (4, 5) and not cl3.complete
 
     def test_optional_step_rendered_separately_when_enabled(self, world, settings):
         settings.CUSTOMER_INVITATIONS_ENABLED = True
         w = world["A"]
+        RoleGrant.objects.filter(vendor_tenant=w.vendor).update(revoked_at=NOW)
         body = client_for(w.admin).get("/").content.decode()
-        assert "Setup: 5 of 6 steps done." in body
+        assert "Setup: 4 of 5 steps done." in body
         assert "Optional steps" in body and "Optional: <a" in body and "don't count toward setup" in body
+
+
+class TestTimeZoneBanner:
+    """Option D: one-time banner, browser zone pre-selected by JS, manual choice without JS."""
+
+    def test_unconfirmed_user_sees_banner_with_utc_default(self, world):
+        w = world["A"]
+        w.admin.refresh_from_db()
+        assert w.admin.time_zone == "UTC" and not w.admin.time_zone_confirmed
+        body = client_for(w.admin).get("/requirements/").content.decode()
+        assert 'id="tz-banner"' in body and "Confirm your time zone" in body
+        assert 'action="/profile/time-zone"' in body and '<option value="Europe/Warsaw">' in body  # no-JS choice
+        assert 'name="next" value="/requirements/"' in body and "Times shown: UTC" in body
+        assert "<script>" not in body and "/static/js/timezone.js" in body  # CSP: external script only
+
+    def test_confirmed_user_sees_no_banner(self, world):
+        assert 'id="tz-banner"' not in client_for(world["A"].manager).get("/").content.decode()
+
+    def test_confirm_records_and_audits(self, world):
+        w = world["A"]
+        c = client_for(w.admin)
+        r = c.post("/profile/time-zone", {"time_zone": "Europe/Lisbon", "detected": "Europe/Lisbon",
+                                          "next": "/requirements/"})
+        assert r.status_code == 302 and r["Location"] == "/requirements/"
+        w.admin.refresh_from_db()
+        assert (w.admin.time_zone, w.admin.time_zone_confirmed) == ("Europe/Lisbon", True)
+        assert w.admin.time_zone_confirmed_at == NOW
+        e = AuditEvent.objects.get(action="confirmed_time_zone", target_id=str(w.admin.pk))
+        assert e.old_value == {"time_zone": "UTC", "confirmed": False}
+        assert e.new_value == {"time_zone": "Europe/Lisbon", "browser_detected": "Europe/Lisbon"}
+        body = c.get("/").content.decode()
+        assert 'id="tz-banner"' not in body and "Times shown: Europe/Lisbon" in body
+
+    def test_manual_choice_differs_from_detected(self, world):
+        w = world["A"]
+        client_for(w.admin).post("/profile/time-zone", {"time_zone": "Europe/Warsaw", "detected": "America/New_York"})
+        e = AuditEvent.objects.get(action="confirmed_time_zone")
+        assert e.new_value == {"time_zone": "Europe/Warsaw", "browser_detected": "America/New_York"}
+
+    @pytest.mark.parametrize("bad", ["Mars/Olympus", "../../etc/passwd", "", "Europe/Warsaw<script>"])
+    def test_invalid_zone_rejected(self, world, bad):
+        w = world["A"]
+        r = client_for(w.admin).post("/profile/time-zone", {"time_zone": bad})
+        assert r.status_code == 400
+        w.admin.refresh_from_db()
+        assert (w.admin.time_zone, w.admin.time_zone_confirmed) == ("UTC", False)
+        assert not AuditEvent.objects.filter(action="confirmed_time_zone").exists()
+
+    def test_bogus_detected_value_not_recorded(self, world):
+        w = world["A"]
+        client_for(w.admin).post("/profile/time-zone", {"time_zone": "UTC", "detected": "Nowhere/Land"})
+        assert AuditEvent.objects.get(action="confirmed_time_zone").new_value["browser_detected"] is None
+
+    def test_open_redirect_blocked(self, world):
+        r = client_for(world["A"].admin).post("/profile/time-zone", {"time_zone": "UTC", "next": "//evil.example"})
+        assert r["Location"] == "/"
+
+    def test_customer_gets_no_banner_and_404(self, world):
+        c = client_for(world["A"].customer_user)
+        assert 'id="tz-banner"' not in c.get("/").content.decode()
+        assert c.post("/profile/time-zone", {"time_zone": "UTC"}).status_code == 404
+
+    def test_display_only_deadlines_unchanged(self, world):
+        """The engine stays UTC: confirming a zone changes labels, not due times."""
+        w = world["A"]
+        c = client_for(w.admin)
+        before = c.get("/clocks/strip").content.decode()
+        c.post("/profile/time-zone", {"time_zone": "Asia/Kolkata"})
+        after = c.get("/clocks/strip").content.decode()
+        import re
+        utc = lambda b: re.findall(r"· (\d\d:\d\d) UTC", b)  # noqa: E731
+        assert utc(before) == utc(after) and utc(before)
+        assert "IST" in after
+
+
+class TestClosedEventsAreFrozen:
+    """QA-02: closed events can't be edited without reopening, in the app and in the database."""
+
+    def closed(self, world):
+        w = world["A"]
+        c = client_for(w.manager)
+        log_drill(c, w)
+        ev = latest(w)
+        r = c.post(f"/events/{ev.pk}/close", {"outcome": "closed_not_reportable", "row_version": ev.row_version,
+                                              "rationale": "Turned out not to be exploited in the drill."})
+        assert r.status_code == 302
+        ev.refresh_from_db()
+        return w, c, ev
+
+    def test_filing_awareness_details_reassign_rejected(self, world):
+        w, c, ev = self.closed(world)
+        before = Art14Event.objects.filter(pk=ev.pk).values().get()
+        r = time_post(c, ev, "early_warning", "2026-10-22", "10:00")
+        assert r.status_code == 400 and "Reopen the event first" in r.content.decode()
+        r = c.post(f"/events/{ev.pk}/awareness", {**aw_fields(t="07:00"), "action": "confirm",
+                                                  "reason": "A stale tab tries to move awareness.",
+                                                  "row_version": ev.row_version})
+        assert "Reopen the event first" in r.content.decode()
+        r = c.post(f"/events/{ev.pk}/details", {"title": "changed after close"})
+        assert r.status_code == 400 and "Reopen the event first" in r.content.decode()
+        r = c.post(f"/events/{ev.pk}/reassign", {"assignee": w.manager.pk})
+        assert r.status_code == 400
+        assert Art14Event.objects.filter(pk=ev.pk).values().get() == before
+        assert ev.detail.title == "Drill title"
+        for path in ("awareness", "details", "reassign"):
+            r = c.get(f"/events/{ev.pk}/{path}")
+            assert r.status_code == 302 and r["Location"] == f"/events/{ev.pk}/"
+
+    def test_reopen_then_edit_works(self, world):
+        w, c, ev = self.closed(world)
+        c.post(f"/events/{ev.pk}/reopen", {"reason": "Reopened: new evidence of exploitation.",
+                                           "row_version": ev.row_version})
+        assert time_post(c, ev, "early_warning", "2026-10-22", "10:00").status_code == 302
+
+    def test_database_rejects_changes_to_closed_events(self, world):
+        from django.db import DatabaseError, transaction
+
+        from apps.art14.models import Art14EventDeployment, Art14EventDetail
+        w, c, ev = self.closed(world)
+        for change in ({"early_warning_filed_at": ev.awareness_at}, {"awareness_at": ev.awareness_at - timedelta(hours=1)},
+                       {"assigned_responder": w.admin}, {"close_rationale": "Rewritten after the fact, quietly."},
+                       {"status": "closed_reporting_complete"}):
+            with pytest.raises(DatabaseError, match="reopen it first"), transaction.atomic():
+                Art14Event.objects.filter(pk=ev.pk).update(**change)
+        with pytest.raises(DatabaseError, match="reopen it first"), transaction.atomic():
+            Art14EventDetail.objects.filter(event=ev).update(title="x")
+        with pytest.raises(DatabaseError, match="reopen it first"), transaction.atomic():
+            Art14EventDeployment.objects.create(vendor_tenant=w.vendor, event=ev, deployment=w.deployment)
+        # a reopen is the one permitted change
+        Art14Event.objects.filter(pk=ev.pk).update(status="open", closed_at=None, close_rationale="")
+
+
+class TestPreviewAndWarnings:
+    """QA-06: preview from type + awareness alone; overdue warning must be seen before saving."""
+
+    def test_preview_with_incomplete_form(self, world):
+        w = world["A"]
+        c = client_for(w.manager)
+        r = c.post("/events/log?drill=1", {"event_type": "vulnerability", "drill": "1", **aw_fields()},
+                   HTTP_HX_REQUEST="true")
+        body = r.content.decode()
+        assert "Fri 23 Oct 2026, 08:05 CEST · 06:05 UTC" in body  # no product, responder or title yet
+        r = client_for(w.admin).post("/events/start", {"event_type": "severe_incident", **aw_fields()})
+        # the admin hasn't confirmed a zone yet (option D), so display is UTC
+        assert "Fri 23 Oct 2026, 06:05 UTC · 06:05 UTC" in r.content.decode()
+
+    def test_form_markup_triggers_preview_without_validation(self, world):
+        body = client_for(world["A"].manager).get("/events/log?drill=1").content.decode()
+        assert '<form method="post">' in body and 'hx-include="closest form"' in body
+
+    def test_overdue_needs_acknowledgement(self, world):
+        w = world["A"]
+        c = client_for(w.manager)
+        n = Art14Event.objects.count()
+        r = log_drill(c, w, awareness_date="2026-10-20")
+        body = r.content.decode()
+        assert r.status_code == 200 and "already passed" in body and "Tick the box" in body
+        assert Art14Event.objects.count() == n
+        r = log_drill(c, w, awareness_date="2026-10-20", acknowledge_overdue="1")
+        assert r.status_code == 302 and Art14Event.objects.count() == n + 1
+
+
+def test_malformed_version_id_is_404(world):
+    """QA-07."""
+    c = client_for(world["A"].admin)
+    for bad in ("not-a-uuid", "", "1' OR '1'='1"):
+        assert c.post("/version/select", {"version": bad}).status_code == 404
+
+
+def test_withdrawn_rationale_never_reaches_customers(world, as_role):
+    """QA-12."""
+    w = world["A"]
+    c = client_for(w.admin)
+    c.post(f"/requirements/{w.status.pk}/", {"status": "not_applicable", "row_version": 0,
+                                             "rationale": "No network interface in this product at all."})
+    with as_role("app_customer", w.customer.id, vendor_tenant_id=w.vendor.id) as cur:
+        cur.execute("SELECT rationale FROM cust_requirement_status WHERE status_id=%s", [str(w.status.pk)])
+        assert cur.fetchone()[0].startswith("No network interface")
+    c.post(f"/requirements/{w.status.pk}/", {"status": "in_progress", "row_version": 1})
+    assert RequirementStatus.objects.get(pk=w.status.pk).rationale == ""
+    assert AuditEvent.objects.filter(target_id=str(w.status.pk), old_value__rationale__startswith="No network").exists()
+    # defence in depth: even a stale rationale on a non-N/A row is not exposed
+    RequirementStatus.objects.filter(pk=w.status.pk).update(rationale="stale text left behind")
+    AIRisk.objects.filter(pk=w.risk.pk).update(rationale="stale risk rationale")
+    with as_role("app_customer", w.customer.id, vendor_tenant_id=w.vendor.id) as cur:
+        cur.execute("SELECT rationale FROM cust_requirement_status WHERE status_id=%s", [str(w.status.pk)])
+        assert cur.fetchone()[0] is None
+        cur.execute("SELECT rationale FROM cust_ai_risk WHERE ai_risk_id=%s", [str(w.risk.pk)])
+        assert cur.fetchone()[0] is None

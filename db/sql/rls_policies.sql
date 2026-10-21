@@ -37,3 +37,11 @@ DROP POLICY IF EXISTS customer_activity_insert ON audit_event;
 CREATE POLICY customer_activity_insert ON audit_event FOR INSERT TO app_customer
     WITH CHECK (actor_tenant_id = app_current_tenant()
                 AND vendor_tenant_id = nullif(current_setting('app.vendor_tenant_id', true), '')::uuid);
+
+-- QA-01: Django's auth.login() updates user_account.last_login with the login
+-- role's own rights (before any tenant context). The column grant in
+-- db_roles.sql limits app_auth to that one column; this policy lets the UPDATE
+-- reach active accounts' rows. No INSERT or DELETE for app_auth anywhere.
+DROP POLICY IF EXISTS auth_last_login ON user_account;
+CREATE POLICY auth_last_login ON user_account FOR UPDATE TO app_auth
+    USING (is_active) WITH CHECK (is_active);

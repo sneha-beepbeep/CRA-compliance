@@ -3,10 +3,12 @@
 <h1>{% if drill %}Log drill{% else %}Log Art. 14 event{% endif %}</h1>
 {% if drill %}<p class="banner drill-banner"><strong>DRILL</strong> · This event is a drill. It can't be changed into a real event, released to customers or counted.{% if not real_events_enabled %} Until real incident data is enabled for this workspace (pilot agreement), only drills can be logged.{% endif %}</p>{% endif %}
 <p class="hint">ⓘ Deadlines are calculated from the awareness time. If it is wrong, every deadline is wrong.</p>
-<form method="post" hx-post="" hx-trigger="change" hx-target="#preview" hx-select="#preview" hx-swap="outerHTML">{% csrf_token %}
+<form method="post">{% csrf_token %}
+  <div hx-post="" hx-trigger="change" hx-include="closest form" hx-target="#preview" hx-select="#preview" hx-swap="outerHTML">
   {% if drill %}<input type="hidden" name="drill" value="1">{% endif %}
   {% if form.non_field_errors %}<div class="error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
   {{ form.as_div }}
+  </div>
   {% include "art14/_preview.html" %}
   <p><button type="submit" name="action" value="preview">Update deadline preview</button>
      <button class="primary" type="submit" name="action" value="save">{% if drill %}Log drill and start clocks{% else %}Log event and start clocks{% endif %}</button>

@@ -47,6 +47,10 @@ def shell(request):
     rows = strip_rows(ctx.vendor_tenant_id)
     versions = list(ProductVersion.objects.select_related("product").order_by("product__name", "-created_at"))
     current = current_version(request, versions)
+    if not getattr(request.user, "time_zone_confirmed", True):
+        from apps.tenancy.views import ConfirmTimeZoneForm
+        out["tz_banner_form"] = ConfirmTimeZoneForm(initial={"time_zone": request.user.time_zone,
+                                                             "next": request.get_full_path()})
     out.update({
         "disclaimer": disclaimer(tenant.legal_name),
         "strip_rows": rows[:3], "strip_more": max(0, len(rows) - 3),

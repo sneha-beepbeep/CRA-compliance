@@ -20,9 +20,20 @@ You are the **orchestrator** for a simulated software product team. The user is 
 
 ## Current status
 
-- **Stage:** 6, `/build`: phase 0 and phase 1a are implemented, committed (`0ee7371`) and pushed to `origin/pipeline-setup` on 2026-10-21. The browser accessibility pass and live Keycloak sign-in are still open. Next: `/test`, or more `/build` work (accessibility pass, S-12 reclassify, S-15 CSV import, phase 1b).
-- **Last artifact:** the phase 0 and 1a implementation (`apps/`, `db/sql/`, `tests/`, and the rest). The Engineer reports 572 passed, 0 failed and 2 skipped (Playwright) on PostgreSQL 16.2. Deviation 13 is done: the invite step is optional, behind the `CUSTOMER_INVITATIONS_ENABLED` flag, which is off.
-- **CPO approval pending on:** nothing. Still needed: catalog content in `data/catalog/` by 2026-10-30; licence checks; infrastructure access (GitHub Actions, EU Keycloak and Postgres) to validate the untested parts.
+- **Stage:** 6, `/build` (loop-back from `/test`): the defect fixes, time-zone option D and the Docker image fix are done and committed on 2026-10-21. The commit is local and not pushed. Next: `/test` again.
+- **Last artifact:**
+  - **Defect fixes:** QA-01 to QA-08, QA-11 and QA-12 fixed. QA-09 partly: the audit-chain check isn't scheduled yet and its records aren't stored outside the database. QA-10 apart from the fact that CI has never run.
+  - **Option D:** the time-zone step is removed (setup counts 5 required steps); a one-time banner confirms the time zone from the browser; new users default to UTC.
+  - **Docker:** `.dockerignore` is now an allowlist (build context 439 KiB instead of 811 MiB); `infra/Dockerfile` is multi-stage, with base images pinned by digest, a non-root user and no dev dependencies.
+  - **Tests on Postgres 16.2:** 664 passed, 0 failed, 1 skipped as owner, including browser tests; 630 passed, 0 failed through the non-superuser role.
+  - **Never actually run:** a real `docker build` (no Docker daemon) and CI.
+- **CPO approval pending on:**
+  - deviations 22–23 (customers get no time-zone banner until phase 1b; UTC display until confirmed);
+  - deviations 24–27 come with the CPO's pre-approval of the Docker proposal;
+  - **new decision before staging:** nothing serves `/static/` in production (WhiteNoise or a proxy/CDN rule);
+  - carried over: keep 15 Nov or move it if staging access is late.
+
+  Still needed: catalog content by 2026-10-30; licence checks by 2026-11-13; infrastructure access (GitHub Actions, EU Keycloak and Postgres).
 - **Pre-pipeline context (for `/ceo-review` and `/kickoff`):** this repo joined the pipeline mid-flight on 2026-10-20. It already holds a SQLite knowledge base of AI risks, innovations, mitigations and barriers extracted from Chapters 1, 2 and 11 of the source book (`schema.sql`, `*.json`, `build_db.py` → `regtech_cyber.db`). The CPO confirmed this repo is the "Provably Secure" / Continuous Hardening as a Service product: the existing database is intended to become the hardened flagship case study. `docs/cpo-draft-prd.md` is the CPO's own pre-pipeline pitch, reformatted. It is **input** to `/kickoff` and `/prd`, not an approved artifact. The open challenge for the CEO is whether hardening a database of public reference content proves anything to buyers. *(Superseded 2026-10-21. See the decision log: the CPO reversed the "hardened flagship case study" premise during `/ceo-review`.)*
 - **Decision log:**
   - 2026-10-20 — **Pre-pipeline build (CPO decision, ahead of the gates):** added the `finding` table plus the `security_changelog` and `cra_deadline_check` views to `schema.sql`, fed from `findings.json` (empty). Built before `/prd`, `/design` and `/plan` at the CPO's explicit request. Later stages should treat it as an existing component to confirm or revise, not as approved scope. Assumption to confirm in `/prd`: CRA Art. 14 applies to manufacturers of products with digital elements; whether a hosted database service falls under the CRA, NIS2 or both is unresolved.
@@ -95,6 +106,10 @@ You are the **orchestrator** for a simulated software product team. The user is 
   - 2026-10-21 — **Build review (phase 0 and 1a):**
     - The CPO approved all 12 build deviations, including 4 (dev-only login), 5 (`app_auth` role), 7 (`real_events_enabled` enforces C6 in code) and 9 (20-character minimum reasons).
     - The "Invite a customer admin" setup step is hidden in the pilot cut and becomes optional: it never counts toward checklist completion. This is deviation 13 against design F-1.
+
+  - 2026-10-21 — **`/test` → loop back to `/build`.** QA verdict: no-ship today; a conditional ship for the 15 Nov drills-only start (1 Critical, 3 Medium, 8 Low defects). The CPO chose to loop back to `/build` to fix them. Asked to "remove the pre-pipeline build from this branch", the CPO confirmed that nothing more needs removing. The files were already cleaned in `/build`, and git history stays as the record. The Postgres `cra_deadline_check` view in the tracker stays.
+  - 2026-10-21 — **Defect-fix review:** the CPO approved deviations 14–21 and chose time-zone option D: the "Confirm your time zone" setup step is removed, the time zone is detected from the browser with a one-time confirmation banner, and the required setup count becomes 5. The CPO asked for a Docker image proposal (build context including `.playwright/`, image hygiene) to review before anything is implemented.
+  - 2026-10-21 — **Docker image:** the CPO pre-approved the Engineer's recommended option (an allowlist `.dockerignore` and a multi-stage, digest-pinned, non-root Dockerfile) and asked for a commit. It brings runtime deviations 24–27: gunicorn starts directly from the image's own environment, `--worker-tmp-dir /dev/shm`, `/app` is read-only, and the dev seed code isn't in the image.
 
 ## Rules for the orchestrator
 

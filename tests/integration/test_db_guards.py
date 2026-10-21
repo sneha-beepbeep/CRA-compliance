@@ -150,3 +150,33 @@ def test_released_incident_uses_customer_reference(world, as_role):
     with as_role("app_customer", a.customer.id, vendor_tenant_id=a.vendor.id) as c:
         c.execute("SELECT reference, event_type FROM cust_incident")
         assert c.fetchall() == [("INC-1", "vulnerability")]
+
+
+# QA-09: vendor sessions can't call the verifier; anchored heads detect tail deletion.
+def test_vendor_role_cannot_call_verify(world, as_role):
+    with as_role("app_vendor", world["A"].vendor.id) as c:
+        with pytest.raises(ProgrammingError, match="permission denied"), transaction.atomic():
+            c.execute("SELECT audit_verify_chain(%s)", [str(world["B"].vendor.id)])
+
+
+def test_anchored_head_detects_tail_deletion(world, tmp_path, capsys):
+    import json
+
+    from django.core.management import call_command
+    a = world["A"].vendor
+    add_audit(a, 3)
+    call_command("verify_audit_chain")
+    anchors = tmp_path / "anchors.json"
+    anchors.write_text(capsys.readouterr().out)
+    assert json.loads(anchors.read_text())["problems"] == []
+    newest = AuditEvent.objects.filter(vendor_tenant=a).order_by("-seq").first()
+    with connection.cursor() as c:
+        c.execute("SET CONSTRAINTS ALL IMMEDIATE")
+        c.execute("ALTER TABLE audit_event DISABLE TRIGGER audit_event_no_update_delete")
+        c.execute("DELETE FROM audit_event WHERE id=%s", [str(newest.id)])
+        c.execute("ALTER TABLE audit_event ENABLE TRIGGER audit_event_no_update_delete")
+    assert verify(a) is None  # the chain alone can't see it ...
+    with pytest.raises(SystemExit) as e:
+        call_command("verify_audit_chain", anchors=str(anchors))
+    assert e.value.code == 1  # ... the anchor can
+    assert "entries removed" in capsys.readouterr().out

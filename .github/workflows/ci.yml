@@ -25,10 +25,20 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.12"
-      - run: uv sync --frozen
-      # Unit, property, golden, copy-lint, isolation, route matrix, integration, static a11y.
-      # The isolation suite blocks merges (technical plan, "Isolation tests").
-      - run: uv run pytest -ra
+      - run: uv sync --frozen --group browser
+      # Chromium for the Playwright drill flow and the axe-core pass (320 px and 1280 px).
+      - run: uv run playwright install --with-deps chromium
+      # Run 1, connected as the database owner: unit, property, golden, copy-lint, isolation,
+      # route matrix, integration, static a11y, browser e2e and axe. Isolation blocks merges.
+      - name: pytest (owner connection, incl. browser tests)
+        run: uv run pytest -ra
+      # Run 2 (QA-01): every test-client request goes through a NON-superuser login role set
+      # up exactly as db/sql/db_roles.sql specifies (app_auth INHERIT TRUE; app_vendor and
+      # app_customer INHERIT FALSE, SET TRUE). Catches grants/policies the owner would bypass.
+      - name: pytest (production login role)
+        run: uv run pytest -ra -m "postgres and not browser"
+        env:
+          TEST_LOGIN_ROLE: tracker_ci_app
       - run: uv run bandit -q -r apps tracker -x tests
       - run: uv run pip-audit --strict
       - run: uv run python manage.py makemigrations --check --dry-run --settings=tracker.settings.test

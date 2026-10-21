@@ -31,12 +31,12 @@ def test_findings_artifacts_removed():
     assert "CREATE TABLE finding" not in schema and "security_changelog" not in schema
 
 
-def test_dockerignore_excludes_book_derived_content():
-    lines = {line.strip() for line in (ROOT / ".dockerignore").read_text().splitlines()}
-    for f in ["regtech_cyber.db", "schema.sql", "build_db.py", "risks.json", "innovations.json", "mitigations.json",
-              "barriers.json", "*.ipynb", "docs/"]:
-        assert f in lines, f
-
+def test_book_derived_files_never_in_docker_context():
+    from tests.docker_context import context_files
+    ctx = set(context_files())
+    for f in ["regtech_cyber.db", "regtech_cyber.sqbpro", "schema.sql", "build_db.py", "risks.json",
+              "innovations.json", "mitigations.json", "barriers.json", "cybersecurity-ai-in-2022-2023.ipynb"]:
+        assert f not in ctx, f
 
 def test_product_never_reads_the_knowledge_base():
     for py in (ROOT / "apps").rglob("*.py"):

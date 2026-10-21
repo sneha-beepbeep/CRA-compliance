@@ -27,6 +27,7 @@ urlpatterns = [
     path("oidc/authenticate/", oidc_start, name="oidc_authentication_init"),
     path("oidc/callback/", oidc_callback, name="oidc_authentication_callback"),
     path("profile/", tenancy.profile),
+    path("profile/time-zone", tenancy.confirm_time_zone),
     # S-1 clock strip partial (polled every 30 s; doesn't reset the idle timer)
     path("clocks/strip", art14.strip),
     # S-3/S-4

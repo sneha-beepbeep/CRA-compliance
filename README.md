@@ -1,6 +1,6 @@
 # CRA and AI Act Security Tracker (working title)
 
-A web dashboard to assess cybersecurity compliance status for software vendors who build complex decion-making AI systems. It tracks the vendor's work on the security requirements of the EU Cyber Resilience Act (CRA) and the AI Act, records how the vendor handles AI-specific risks, and counts down the CRA Art. 14 reporting deadlines for exploited vulnerabilities and severe incidents.
+A web dashboard to assess cybersecurity compliance status for software vendors who build complex decion-making AI systems for use by EU markets. It tracks the vendor's work on the security requirements of the EU Cyber Resilience Act (CRA) and the AI Act, records how the vendor handles AI-specific risks, and counts down the CRA Art. 14 reporting deadlines for exploited vulnerabilities and severe incidents.
 
 **Status: pilot, drills only.** The vendor workspace is built and in a paid pilot with one vendor from mid-November 2026. Until an independent penetration test has passed (expected around 7 December 2026), the system accepts **simulated ("drill") events only** and refuses real incident data. The customer-facing view, exports and several other features are still to come (see [What's coming](#whats-coming)).
 

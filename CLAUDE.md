@@ -20,24 +20,26 @@ You are the **orchestrator** for a simulated software product team. The user is 
 
 ## Current status
 
-- **Stage:** 7, `/test` revision 2, filed 2026-10-21 (commit `7407241` re-tested). Verdict: **conditional ship for the 15 Nov drills-only start**. Nothing in the application blocks it; the outstanding conditions are infrastructure and content. Next: a short `/build` pass (the static-file hostname configuration, plus QA-13 and QA-14 if the CPO wants them now), or `/ship` once the conditions are met.
-- **Last artifact:** `docs/test-report.md` revision 2, with the first run kept as history.
-  - **Tests:** 664 passed, 1 skipped as owner; 630 passed through the non-superuser role; 35 browser tests run; about 190 of QA's own checks pass, plus the 1 expected failure (the open part of QA-09); axe 0 violations across 64 page loads.
-  - **First-run defects:** QA-01 to QA-12 fixed (QA-09 partly).
-  - **Option D and the earlier checks:** all pass.
-  - **New Low defects:**
-    - QA-13: the operator commands fail safe under the app's login role, but nothing documents that they need owner credentials;
-    - QA-14: the sign-in policy can update `last_login` for active users in every tenant (that column only).
-- **CPO approval pending on:** (1) accept the conditional ship; (2) deviations 22–23 (QA has no objection); (3) fix QA-13 and QA-14 now or accept them until the pentest.
-  - **Conditions for 15 Nov:**
-    - Keycloak with MFA proven in EU staging (`amr` claim);
-    - CI green;
-    - Docker image built and running in staging (QA recommends a CI `docker build` job);
-    - catalog content by 2026-10-30;
-    - operator runbook covering user provisioning, owner credentials and chain-check scheduling;
-    - C6 clause signed;
-    - licences by 2026-11-13.
-  - **Static files:** Cloudflare serves static files only (decided). They need a separate hostname and a CSP update (see the decision log).
+- **Stage:** 8, `/ship`: **shipped (release prepared) on 2026-10-21.** `docs/release-notes.md` is the release package for the 15 Nov drills-only pilot. Go-live depends on the 21-item go/no-go checklist in Part C; the decider is staging, Keycloak and CI working by about 6 Nov, otherwise the start date moves. Next: `/graduate` when the CPO chooses, or further `/build` for the pre-launch items.
+- **Last artifact:** `docs/release-notes.md`.
+  - **Part A:** vendor-facing notes.
+  - **Part B:** internal notes. The release candidate will move past `7407241` once the static-file change and the CI `docker build` job land, so QA needs to smoke-test it in staging.
+  - **Part C:** go/no-go checklist for 15 Nov.
+  - **Part D:** real-data gate (around 7 Dec) and bank-access gate (around 11 Dec).
+  - **Part E:** rollback plan.
+  - **Part F:** decisions for the CPO.
+- **CPO approval pending on (Part F):**
+  1. a README rewrite for end users before `/graduate`;
+  2. adding users in production: (a) an audited command (recommended) or (b) a shell runbook with no audit record;
+  3. naming the Ops/on-call owner and an engineer per item;
+  4. dates: 15 Nov is a Sunday (proposed go/no-go Fri 13 Nov, kickoff Mon 16 Nov);
+  5. the hosting provider (OVHcloud or Scaleway);
+  6. vendor support terms;
+  7. rollback thresholds;
+  8. the Engineer to supply one line for each undocumented deviation;
+  9. a pull request to `main` (CI runs only on PRs and pushes to `main`).
+
+  Gaps found: there's no production way to add users; static file names aren't content-hashed (risk of a stale Cloudflare cache on rollback); the Keycloak realm only has a localhost redirect address.
 - **Pre-pipeline context (for `/ceo-review` and `/kickoff`):** this repo joined the pipeline mid-flight on 2026-10-20. It already holds a SQLite knowledge base of AI risks, innovations, mitigations and barriers extracted from Chapters 1, 2 and 11 of the source book (`schema.sql`, `*.json`, `build_db.py` → `regtech_cyber.db`). The CPO confirmed this repo is the "Provably Secure" / Continuous Hardening as a Service product: the existing database is intended to become the hardened flagship case study. `docs/cpo-draft-prd.md` is the CPO's own pre-pipeline pitch, reformatted. It is **input** to `/kickoff` and `/prd`, not an approved artifact. The open challenge for the CEO is whether hardening a database of public reference content proves anything to buyers. *(Superseded 2026-10-21. See the decision log: the CPO reversed the "hardened flagship case study" premise during `/ceo-review`.)*
 - **Decision log:**
   - 2026-10-20 — **Pre-pipeline build (CPO decision, ahead of the gates):** added the `finding` table plus the `security_changelog` and `cra_deadline_check` views to `schema.sql`, fed from `findings.json` (empty). Built before `/prd`, `/design` and `/plan` at the CPO's explicit request. Later stages should treat it as an existing component to confirm or revise, not as approved scope. Assumption to confirm in `/prd`: CRA Art. 14 applies to manufacturers of products with digital elements; whether a hosted database service falls under the CRA, NIS2 or both is unresolved.
@@ -116,6 +118,8 @@ You are the **orchestrator** for a simulated software product team. The user is 
   - 2026-10-21 — **Docker image:** the CPO pre-approved the Engineer's recommended option (an allowlist `.dockerignore` and a multi-stage, digest-pinned, non-root Dockerfile) and asked for a commit. It brings runtime deviations 24–27: gunicorn starts directly from the image's own environment, `--worker-tmp-dir /dev/shm`, `/app` is read-only, and the dev seed code isn't in the image.
   - 2026-10-21 — **Static files:** the CPO chose to have the hosting platform's proxy serve `/static/` in production, using **Cloudflare**, not WhiteNoise. No app change is needed; staging needs the proxy rule. **Decided the same day:** Cloudflare proxies **only static files** (CSS, JS, images), never app traffic. The app, its TLS and all incident data stay on the EU-headquartered platform, in line with C3. Follow-up for staging: serve static files from a separate hostname behind Cloudflare, and point the app's `STATIC_URL` and the CSP `script-src`/`style-src` at that origin. This is a small configuration change for the Engineer.
   - 2026-10-21 — **`/test` revision 2: conditional ship for 15 Nov.** All first-run defects are fixed (QA-09 partly) and no new Medium-or-higher defects were found; 2 new Low (QA-13, QA-14). QA noted that, with today's CSP (`script-src 'self'`), static files on a different hostname are blocked unless the CSP and `STATIC_URL` are updated. That is the configuration change already recorded for the CPO's static-only Cloudflare decision.
+  - 2026-10-21 — **`/test` revision 2 accepted.** The CPO accepted the conditional ship for the 15 Nov drills-only start and approved deviations 22–23. QA-13 and QA-14 are accepted until the pentest and added to its scope. Pushing to GitHub waits until after `/ship`. The static-file hostname and CSP configuration change is not built yet, so it is a pre-launch condition for `/ship`.
+  - 2026-10-21 — **`/ship` complete; cycle closed.** The Launch Coordinator produced `docs/release-notes.md` (Parts A–F). This closes the first pipeline cycle (stages 1–8) on the release *package* for the 15 Nov drills-only pilot. Shipped means the release is prepared, not deployed: nothing is provisioned or deployed. Go-live is governed by the Part C checklist, and the later real-data and bank-access gates by Part D. Open items carried into the next cycle are the Part F decisions, the static-file and CSP change, an audited user-provisioning command, content-hashed static files, the CI `docker build` job, and QA-09, QA-13 and QA-14 in the pentest scope. As instructed, the commits were pushed after `/ship`.
 
 ## Rules for the orchestrator
 

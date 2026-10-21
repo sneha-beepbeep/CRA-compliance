@@ -20,9 +20,9 @@ You are the **orchestrator** for a simulated software product team. The user is 
 
 ## Current status
 
-- **Stage:** 2 complete: `/kickoff` approved by the CPO on 2026-10-21. Next: `/prd`, which is gated on vendor validation.
-- **Last artifact:** `docs/opportunity-brief.md` (revision 3, approved), plus `README.md` created from the product template.
-- **CPO approval pending on:** nothing. Before `/prd` runs, the CPO must complete the CEO's hard gate: 3–5 conversations with credit-scoring vendors, including one priced pilot candidate. If that fails, run `/checkpoint` instead. The other validation steps are in `docs/opportunity-brief.md`. Open questions for `/prd`: whether bank-side admins can see the dashboard and which incidents; whether deadlines get narrower visibility; how to define status for AI-specific risks.
+- **Stage:** 5 complete: `/plan` approved by the CPO on 2026-10-21. Next: `/build`.
+- **Last artifact:** the technical plan, approved, saved as `docs/technical-plan.md`.
+- **CPO approval pending on:** nothing. C4 (2 engineers) and C6 (pilot-agreement clause) are confirmed. On the critical path: the PM or legal delivers about 35 requirement rows by 2026-10-30. Still open: the vendors' delivery models (OQ4); IP clearance; licence checks on the taxonomy seeds; legal review (disclaimer, month rule, C7, Art. 14 checked against the Official Journal) before the bank gets access (around 2026-12-11).
 - **Pre-pipeline context (for `/ceo-review` and `/kickoff`):** this repo joined the pipeline mid-flight on 2026-10-20. It already holds a SQLite knowledge base of AI risks, innovations, mitigations and barriers extracted from Chapters 1, 2 and 11 of the source book (`schema.sql`, `*.json`, `build_db.py` → `regtech_cyber.db`). The CPO confirmed this repo is the "Provably Secure" / Continuous Hardening as a Service product: the existing database is intended to become the hardened flagship case study. `docs/cpo-draft-prd.md` is the CPO's own pre-pipeline pitch, reformatted. It is **input** to `/kickoff` and `/prd`, not an approved artifact. The open challenge for the CEO is whether hardening a database of public reference content proves anything to buyers. *(Superseded 2026-10-21. See the decision log: the CPO reversed the "hardened flagship case study" premise during `/ceo-review`.)*
 - **Decision log:**
   - 2026-10-20 — **Pre-pipeline build (CPO decision, ahead of the gates):** added the `finding` table plus the `security_changelog` and `cra_deadline_check` views to `schema.sql`, fed from `findings.json` (empty). Built before `/prd`, `/design` and `/plan` at the CPO's explicit request. Later stages should treat it as an existing component to confirm or revise, not as approved scope. Assumption to confirm in `/prd`: CRA Art. 14 applies to manufacturers of products with digital elements; whether a hosted database service falls under the CRA, NIS2 or both is unresolved.
@@ -48,6 +48,50 @@ You are the **orchestrator** for a simulated software product team. The user is 
     - There is no cloud-only fallback. The CPO asserts that all target vendors ship software; this is not yet verified and must be checked in the vendor conversations.
     - Following the CPO's lawyer, a hosted API is treated as in CRA scope when it is paired with bank-side vendor software that needs it to work.
     - The SaaS line was revised: CRA scope depends on whether the vendor ships software, not on SaaS versus non-SaaS.
+  - 2026-10-21 — **Vendor gate evidence (CPO report, not yet ruled on):** the CPO held confidential conversations with 3 credit-scoring vendors, all open to a pilot. The CPO puts the average pilot price at €50,000, taken from Gera's published pricing guide for mid-market *deployers* (https://geracompliance.com/blog/ai-compliance-pricing-breakdown-2026). It is a market benchmark, not a figure the vendors gave. Not yet recorded: whether each vendor ships software to banks, and what their delivery models are. Whether this meets the CEO's hard gate is undecided.
+  - 2026-10-21 — **Vendor-stated price signal (CPO report):** one of the three vendors said it is open to a 3-month pilot with one of its banking clients at €12,000 per month (€36,000 in total). This is the vendor's own figure, and it meets the "priced pilot candidate" part of the CEO's hard gate. Still to confirm in `/prd`: the banking client's role in the pilot.
+  - 2026-10-21 — **CPO assumptions for `/prd`:** (1) the vendor pays us for the pilot; (2) each vendor ships software to banks or to another highly regulated client. Both are CPO assumptions, not confirmed with the vendors. Assumption 2 widens the client base beyond banks. `/prd` must check that in-scope systems still fall under AI Act Annex III 5(b), which covers credit scoring of individuals by any deployer, not only banks.
+  - 2026-10-21 — **`/prd` approved (draft 1).** The approval accepts the PRD's proposed answers to OQ1–OQ3:
+    - **OQ1:** bank admins get a read-only view of their own deployment, and see incidents only after the vendor marks affected users as informed under Art. 14(8).
+    - **OQ2:** every vendor admin sees deadline states; only a vendor "incident responder" role sees full incident details.
+    - **OQ3:** AI-risk status is a handling stage plus a "last tested" date, with no scores and no pass/fail.
+
+    The CPO also confirmed:
+    - **Payer:** the vendor pays for the pilot (€12k/month for 3 months, €36k in total).
+    - **Bank's role (OQ5):** co-payer. The bank pays €15k once the pilot succeeds and its legal team has reviewed it. This makes success metric P6 (the bank's written view on accepting the dashboard as supplier evidence) commercially load-bearing.
+    - **Start date:** 2026-11-15, so the pilot ends around 2027-02-15. That is after the 90-day kill-signal deadline of 2027-01-19, so those signals are judged on evidence from before and early in the pilot.
+
+    **Still open:** the vendors' delivery models (OQ4).
+  - 2026-10-21 — **`/design` approved (draft 2).** The CPO's answers to D1–D10:
+    - **D1:** customers never see Art. 14 deadline states or filing times.
+    - **D2:** the customer-visible fields are confirmed as proposed.
+    - **D3:** status is tracked per product version.
+    - **D4:** any vendor admin can start a clock from type, awareness time, product and an assigned responder only. Incident details require the responder role, checked on every request.
+    - **D5:** the vendor grants roles.
+    - **D6:** idle timeouts of 8h for vendor roles and 30 min for customer roles, with re-authentication before "mark informed".
+    - **D7, D8:** deferred to the engineer at `/plan`.
+    - **D9:** the vendor can see customer activity, and the customer can switch it to "organisation only" (the default until chosen).
+    - **D10:** month-end clamp for the one-month deadline, pending legal confirmation.
+
+    By approving draft 2, the CPO also accepted the designer's proposals on the three items that were still open:
+    - customer admins are invited by the vendor and sign in through our identity service with MFA for the pilot; the customer's own identity provider comes later. Designated vendor access managers grant roles.
+    - the D9 rules as specified in section 9.6.
+    - the pending deviations from the PRD in section 18, including #15: at least one incident responder is required at setup.
+  - 2026-10-21 — **`/plan` approved (technical plan, draft 1, in `docs/technical-plan.md`).**
+    - **Stack:** Django 5.2 LTS, PostgreSQL 16 (tenant isolation through row-level security and a separate customer database role), HTMX, Keycloak in the EU, WeasyPrint for PDF/UA.
+    - **Deadline engine:** pure Python is authoritative; the Postgres `cra_deadline_check` view is an independent check.
+    - **D7:** close states plus reopen go in the pilot cut; linked events get their table now and their screens in phase 1b.
+    - **D8:** drill mode is in the pilot cut; Art. 14 events stay out of CSV import.
+    - **Phasing:** 15 Nov is drills only; real incident data after the pentest (around 7 Dec); bank access after the pentest and legal sign-off (around 11 Dec).
+    - **The plan's recommendations are accepted with its approval:**
+      - C1: customers get their own incident reference, assigned at release;
+      - C2: countdowns revealing the awareness time to non-responder admins is accepted as a known limitation;
+      - C3: EU-headquartered hosting (OVHcloud or Scaleway), with AWS Frankfurt as fallback;
+      - C5: evidence is links only in the pilot;
+      - C7: a fix recorded before awareness is allowed with a warning and referred to legal;
+      - C8: NIST AI 100-2 and MITRE ATLAS as taxonomy seeds after a licence check; OWASP on hold.
+    - **C4 and C6, confirmed by the CPO on 2026-10-21:** 2 engineers; the pilot agreement will state that no real incident data is loaded until the pentest passes.
+    - **Pre-built schema:** `finding` and `cra_deadline_check` move into the tracker; `security_changelog` and `findings.json` will be removed.
 
 ## Rules for the orchestrator
 

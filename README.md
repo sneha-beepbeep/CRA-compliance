@@ -2,6 +2,8 @@
 
 A web dashboard to assess cybersecurity compliance status for software vendors who build complex decion-making AI systems for use by EU markets. It tracks the vendor's work on the security requirements of the EU Cyber Resilience Act (CRA) and the AI Act, records how the vendor handles AI-specific risks, and counts down the CRA Art. 14 reporting deadlines for exploited vulnerabilities and severe incidents.
 
+**[Try the click-through demo →](https://sneha-beepbeep.github.io/CRA-compliance/demos/cra-compliance/)** A six-step walkthrough with a fictional vendor and sample data. Not legal advice.
+
 **Status: pilot, drills only.** The vendor workspace is built and in a paid pilot with one vendor from mid-November 2026. Until an independent penetration test has passed (expected around 7 December 2026), the system accepts **simulated ("drill") events only** and refuses real incident data. The customer-facing view, exports and several other features are still to come (see [What's coming](#whats-coming)).
 
 > **What this is not.** This is not a certification, conformity assessment, audit opinion or determination of compliance with Regulation (EU) 2024/2847 (Cyber Resilience Act) or Regulation (EU) 2024/1689 (AI Act). The dashboard **supports** your own work and shows only what your team enters. It doesn't file anything with any authority. You remain responsible for your reports and your legal judgement.

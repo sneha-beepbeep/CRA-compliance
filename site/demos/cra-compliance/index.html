@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CRA and AI Act Security Tracker – demo</title>
+  <meta name="description" content="A six-step walkthrough of the CRA and AI Act Security Tracker with a fictional vendor and sample data.">
+  <link rel="stylesheet" href="../../assets/css/site.css">
+  <style>
+    .req-table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+    .req-table th, .req-table td { text-align: left; padding: .55rem .4rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .req-table th { font-size: .85rem; color: var(--muted); font-weight: 600; }
+    .req-table .cite { font-weight: 600; }
+    .field { display: grid; gap: .3rem; margin: 1rem 0; }
+    .field label { font-weight: 600; }
+    .field input { font: inherit; padding: .55rem .6rem; min-height: 44px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); max-width: 100%; }
+    .field .help { font-size: .88rem; color: var(--muted); }
+    .deadline { display: grid; gap: .2rem; }
+    .deadline .when { font-variant-numeric: tabular-nums; }
+    .deadline .countdown { font-weight: 700; font-variant-numeric: tabular-nums; }
+    @media (max-width: 560px) {
+      .req-table thead { display: none; }
+      .req-table, .req-table tbody, .req-table tr, .req-table td { display: block; width: 100%; }
+      .req-table tr { border: 1px solid var(--border); border-radius: 8px; padding: .5rem .7rem; margin-bottom: 8px; }
+      .req-table td { border: 0; padding: .15rem 0; }
+      .req-table td[data-label]::before { content: attr(data-label) ": "; color: var(--muted); font-size: .85rem; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to demo</a>
+  <div class="demo-banner" role="note">Demo with sample data, not legal advice.</div>
+
+  <header class="site-header wrap">
+    <a class="crumb" href="../../">← All demos</a>
+    <h1>CRA and AI Act Security Tracker</h1>
+    <p class="muted">For vendors whose AI systems assess the creditworthiness of individuals in the EU. This walkthrough uses a fictional vendor; nothing you enter leaves your browser.</p>
+  </header>
+
+  <main id="main" class="wrap">
+    <div class="stepper" id="demo">
+
+      <!-- 1 -->
+      <section class="step" data-title="The problem">
+        <h2>The compliance problem</h2>
+        <p>A company that sells AI credit-scoring software into the EU has two sets of security rules to work through at once: the essential requirements in <strong>Annex I of the Cyber Resilience Act (CRA)</strong> and the cybersecurity rule for high-risk AI in <strong>Article 15 of the AI Act</strong>.</p>
+        <p>On top of that, CRA Article 14 sets hard reporting clocks. Once the vendor becomes aware of an actively exploited vulnerability or a severe incident, an early warning is due within <strong>24 hours</strong> and a notification within <strong>72 hours</strong>.</p>
+        <p>In practice this work sits in spreadsheets and chat threads, and nobody can say at a glance which requirements have evidence, which AI risks are handled, or when the next report is due.</p>
+        <div class="callout">In the next steps you'll see the tracker's view of a fictional vendor, <strong>Northwind Scoring</strong>, then run a reporting drill yourself.</div>
+      </section>
+
+      <!-- 2 -->
+      <section class="step" data-title="Requirements">
+        <h2>Requirement status for one product version</h2>
+        <p id="req-summary"></p>
+        <table class="req-table">
+          <thead><tr><th scope="col">Requirement</th><th scope="col">Status</th><th scope="col">Evidence</th></tr></thead>
+          <tbody id="req-rows"></tbody>
+        </table>
+        <p class="muted" style="margin-top:.9rem">The overview is a count, not a score. "Evidence stale" is never set by hand: it appears when the review-by date has passed. A requirement marked not applicable needs a written reason.</p>
+      </section>
+
+      <!-- 3 -->
+      <section class="step" data-title="AI-risk register">
+        <h2>AI-risk register</h2>
+        <p>Each AI-specific risk gets a handling stage, an owner, a "last tested" date and links to the requirements it relates to. There are no scores and no pass/fail.</p>
+        <ul class="items" id="risk-list"></ul>
+      </section>
+
+      <!-- 4 -->
+      <section class="step" data-title="Start a drill">
+        <h2>Start an Art. 14 reporting drill</h2>
+        <p>The tracker accepts simulated ("drill") events only during the pilot. Pick an event type and say when the vendor became aware of it.</p>
+        <fieldset class="choices">
+          <legend>Event type</legend>
+          <label class="choice"><input type="radio" name="etype" value="vuln" checked>
+            <span><span class="choice-title">Actively exploited vulnerability</span><br><span class="choice-sub">Final report: 14 days after a fix or mitigation is available</span></span></label>
+          <label class="choice"><input type="radio" name="etype" value="incident">
+            <span><span class="choice-title">Severe incident</span><br><span class="choice-sub">Final report: one month after the notification is filed</span></span></label>
+        </fieldset>
+        <div class="field">
+          <label for="aware">Awareness time (UTC)</label>
+          <input type="datetime-local" id="aware" required aria-describedby="aware-help">
+          <span class="help" id="aware-help">Pre-filled with three hours ago so you can see live countdowns. All deadlines are counted from this time.</span>
+        </div>
+        <div class="field">
+          <label for="start2" id="start2-label">Fix or mitigation available (UTC), optional</label>
+          <input type="datetime-local" id="start2" aria-describedby="start2-help">
+          <span class="help" id="start2-help">Leave empty if there isn't one yet. The final-report clock starts only once this is recorded.</span>
+        </div>
+      </section>
+
+      <!-- 5 -->
+      <section class="step" data-title="Deadlines">
+        <h2>Your reporting deadlines</h2>
+        <p id="drill-summary"></p>
+        <ul class="items" id="deadlines"></ul>
+        <div id="drill-warn"></div>
+        <p class="muted">Times are fixed in UTC. The second time shows your browser's time zone (<span id="tzname"></span>); in the product you confirm your time zone once.</p>
+      </section>
+
+      <!-- 6 -->
+      <section class="step" data-title="What it means">
+        <h2>What this means for you</h2>
+        <div id="meaning"></div>
+        <div class="callout warn">
+          <strong>Limits of this demo and the product.</strong>
+          <ul style="margin:.4rem 0 0; padding-left:1.2rem">
+            <li>The tracker is not a certification, conformity assessment, audit opinion or determination of compliance. It shows only what your team enters.</li>
+            <li>It does not file anything with any authority and sends no notifications. Someone has to look at the clock, including outside office hours.</li>
+            <li>Deadlines are only as right as the awareness time you enter.</li>
+            <li>The severe-incident "one month" rule (clamped to month end) is pending legal confirmation.</li>
+            <li>Requirement descriptions on this page were written for the demo; in the product, short titles are still pending legal review.</li>
+          </ul>
+        </div>
+        <p>Want the detail? See the <a href="https://github.com/sneha-beepbeep/CRA-compliance#readme">README on GitHub</a>.</p>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="site-footer wrap">
+    <p>Source code: <a href="https://github.com/sneha-beepbeep/CRA-compliance">sneha-beepbeep/CRA-compliance</a>. Fictional vendor and sample data only; not legal advice.</p>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="../../assets/js/stepper.js"></script>
+  <script>
+  (function () {
+    const D = window.DEMO_DATA;
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const today = new Date(D.today + 'T00:00:00Z');
+    const isStale = (reviewBy) => reviewBy && new Date(reviewBy + 'T00:00:00Z') < today;
+
+    // ---- Step 2: requirements ----
+    const STATUS = {
+      not_started: ['not started', ''],
+      in_progress: ['in progress', 'warn'],
+      evidence_attached: ['evidence attached', 'ok'],
+      evidence_stale: ['evidence stale', 'bad'],
+      not_applicable: ['not applicable (with rationale)', ''],
+    };
+    const reqs = D.requirements.map((r) => ({ ...r, shown: r.status === 'evidence_attached' && isStale(r.review_by) ? 'evidence_stale' : r.status }));
+    const attached = reqs.filter((r) => r.shown === 'evidence_attached').length;
+    document.getElementById('req-summary').innerHTML =
+      `<strong>${esc(D.product)} ${esc(D.version)}</strong> · ${esc(D.vendor)}<br>Evidence attached for <strong>${attached} of ${reqs.length}</strong> requirements shown here.`;
+    document.getElementById('req-rows').innerHTML = reqs.map((r) => {
+      const [label, cls] = STATUS[r.shown];
+      const extra = r.shown === 'evidence_stale' ? `<br><span class="muted">Review-by date ${esc(r.review_by)} has passed</span>`
+        : r.rationale ? `<br><span class="muted">${esc(r.rationale)}</span>` : '';
+      return `<tr>
+        <td><span class="cite">${esc(r.citation)}</span><br><span class="muted">${esc(r.note)}</span></td>
+        <td data-label="Status"><span class="tag ${cls}">${esc(label)}</span>${extra}</td>
+        <td data-label="Evidence">${r.evidence ? r.evidence + ' link' + (r.evidence > 1 ? 's' : '') : '—'}</td></tr>`;
+    }).join('');
+
+    // ---- Step 3: AI risks ----
+    const STAGE = {
+      not_assessed: ['not assessed', ''],
+      assessed_planned: ['assessed – treatment planned', 'warn'],
+      treatment_in_place: ['treatment in place – evidence attached', 'ok'],
+      evidence_stale: ['evidence stale', 'bad'],
+    };
+    document.getElementById('risk-list').innerHTML = D.risks.map((r) => {
+      const st = r.stage === 'treatment_in_place' && isStale(r.review_by) ? 'evidence_stale' : r.stage;
+      const [label, cls] = STAGE[st];
+      return `<li class="item">
+        <h3>${esc(r.name)}</h3>
+        <div class="tags"><span class="tag ${cls}">${esc(label)}</span></div>
+        <p>Owner: ${esc(r.owner)} · Last tested: ${r.last_tested ? esc(r.last_tested) : 'never'}</p>
+        ${r.planned ? `<p class="muted">Planned: ${esc(r.planned)}</p>` : ''}
+        <p class="muted">Related: ${r.links.map(esc).join(', ')}</p></li>`;
+    }).join('');
+
+    // ---- Step 4: drill input ----
+    const aware = document.getElementById('aware');
+    const start2 = document.getElementById('start2');
+    const toInput = (d) => d.toISOString().slice(0, 16);           // YYYY-MM-DDTHH:MM in UTC
+    const fromInput = (v) => (v ? new Date(v + ':00Z') : null);     // read the field as UTC
+    const threeHoursAgo = new Date(Math.floor((Date.now() - 3 * 3600e3) / 60e3) * 60e3);
+    aware.value = toInput(threeHoursAgo);
+
+    function syncType() {
+      const vuln = document.querySelector('input[name=etype]:checked').value === 'vuln';
+      document.getElementById('start2-label').textContent = vuln
+        ? 'Fix or mitigation available (UTC), optional' : 'Notification filed (UTC), optional';
+    }
+    document.querySelectorAll('input[name=etype]').forEach((i) => i.addEventListener('change', () => { start2.value = ''; syncType(); }));
+    syncType();
+
+    // ---- Deadline rules (mirror apps/art14/deadlines.py) ----
+    const H = 3600e3;
+    function addOneMonth(d) { // calendar month in UTC, clamped to the last day of that month
+      const y = d.getUTCFullYear(), m = d.getUTCMonth() + 1;
+      const last = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+      return new Date(Date.UTC(y, m, Math.min(d.getUTCDate(), last), d.getUTCHours(), d.getUTCMinutes()));
+    }
+    const fmtUTC = new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const fmtLocal = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'local';
+    document.getElementById('tzname').textContent = tz;
+
+    function countdown(due) {
+      let ms = due - Date.now();
+      const over = ms < 0; ms = Math.abs(ms);
+      const d = Math.floor(ms / 864e5), h = Math.floor(ms % 864e5 / H), m = Math.floor(ms % H / 60e3);
+      const s = (d ? d + ' d ' : '') + h + ' h ' + String(m).padStart(2, '0') + ' min';
+      return over ? ['Overdue by ' + s, 'bad'] : ['Due in ' + s, d === 0 && h < 6 ? 'warn' : 'ok'];
+    }
+
+    let timer = null;
+    function renderDeadlines(state) {
+      const list = [
+        { name: 'Early warning', due: new Date(state.aware.getTime() + 24 * H), basis: 'awareness + 24 hours' },
+        { name: 'Notification', due: new Date(state.aware.getTime() + 72 * H), basis: 'awareness + 72 hours' },
+      ];
+      if (state.vuln) {
+        list.push({ name: 'Final report', due: state.start2 ? new Date(state.start2.getTime() + 14 * 24 * H) : null,
+          basis: 'fix or mitigation available + 14 days', pending: 'Starts once a fix or mitigation is recorded as available.' });
+      } else {
+        list.push({ name: 'Final report', due: state.start2 ? addOneMonth(state.start2) : null,
+          basis: 'notification filed + 1 calendar month (clamped to month end, pending legal confirmation)', pending: 'Starts once you record when the notification was filed.' });
+      }
+      state.deadlines = list;
+      const draw = () => {
+        document.getElementById('deadlines').innerHTML = list.map((x) => {
+          if (!x.due) return `<li class="item deadline"><h3>${x.name}</h3><span class="tag">not started</span><p class="muted">${x.pending}</p><p class="muted">Rule: ${x.basis}</p></li>`;
+          const [cd, cls] = countdown(x.due);
+          return `<li class="item deadline"><h3>${x.name}</h3>
+            <span class="countdown"><span class="tag ${cls}">${cd}</span></span>
+            <span class="when">${fmtUTC.format(x.due)} UTC · ${fmtLocal.format(x.due)}</span>
+            <p class="muted">Rule: ${x.basis}</p></li>`;
+        }).join('');
+      };
+      draw();
+      clearInterval(timer);
+      timer = setInterval(() => { if (!document.getElementById('step-5').hidden) draw(); else clearInterval(timer); }, 30e3);
+
+      document.getElementById('drill-summary').innerHTML =
+        `<span class="tag warn">DRILL</span> ${state.vuln ? 'Actively exploited vulnerability' : 'Severe incident'} in ${esc(D.product)} ${esc(D.version)}, aware since ${fmtUTC.format(state.aware)} UTC.`;
+      document.getElementById('drill-warn').innerHTML = state.vuln && state.start2 && state.start2 < state.aware
+        ? '<div class="callout warn">The fix time is earlier than the awareness time. The product allows this with a warning; check such cases with legal counsel.</div>' : '';
+    }
+
+    function renderMeaning(state) {
+      const next = state.deadlines.filter((x) => x.due && x.due > Date.now()).sort((a, b) => a.due - b.due)[0];
+      const stale = reqs.filter((r) => r.shown === 'evidence_stale').length;
+      const open = reqs.filter((r) => r.shown === 'not_started' || r.shown === 'in_progress').length;
+      const unassessed = D.risks.filter((r) => r.stage === 'not_assessed').length;
+      document.getElementById('meaning').innerHTML = `
+        <div class="stat-row">
+          <div class="stat"><span class="n">${attached}/${reqs.length}</span><span class="l">requirements with current evidence</span></div>
+          <div class="stat"><span class="n">${stale}</span><span class="l">with stale evidence to refresh</span></div>
+          <div class="stat"><span class="n">${unassessed}</span><span class="l">AI risk${unassessed === 1 ? '' : 's'} not yet assessed</span></div>
+        </div>
+        <ul style="padding-left:1.2rem">
+          <li><strong>Reporting:</strong> ${next ? `your next drill deadline is the <strong>${next.name.toLowerCase()}</strong>, due ${fmtUTC.format(next.due)} UTC. In a real event you would file it with the authority yourself, then record the filing time in the tracker.` : 'every deadline in this drill has passed. In a real event, overdue reports still need to be filed and recorded.'}</li>
+          <li><strong>Requirements:</strong> ${open} requirement${open === 1 ? ' is' : 's are'} still open, and ${stale} need${stale === 1 ? 's' : ''} new evidence because the review-by date has passed.</li>
+          <li><strong>AI risks:</strong> each unassessed risk is a gap you can see and assign to an owner, rather than a hidden score.</li>
+        </ul>
+        <p>The value is a shared, auditable view: who changed what and when is recorded and can't be edited, so the team can rely on the history. A read-only view for your customers is planned after the pilot's security gate.</p>`;
+    }
+
+    window.demo = Stepper.init('#demo', {
+      canLeave: {
+        4: (el, state) => {
+          state.vuln = document.querySelector('input[name=etype]:checked').value === 'vuln';
+          state.aware = fromInput(aware.value);
+          state.start2 = fromInput(start2.value);
+          if (!state.aware || isNaN(state.aware)) return 'Enter the awareness time to start the drill.';
+          if (state.aware > Date.now()) return 'The awareness time can’t be in the future.';
+          if (state.start2 && state.start2 > Date.now()) return 'Record only times that have already happened.';
+          if (!state.vuln && state.start2 && state.start2 < state.aware) return 'The notification can’t be filed before the awareness time.';
+          return true;
+        },
+      },
+      onEnter: {
+        5: (el, state) => renderDeadlines(state),
+        6: (el, state) => { if (!state.deadlines) renderDeadlines(state); renderMeaning(state); },
+      },
+    });
+  })();
+  </script>
+</body>
+</html>

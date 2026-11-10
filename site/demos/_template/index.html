@@ -1,0 +1,100 @@
+<!doctype html>
+<!--
+  STEPPER TEMPLATE: copy this folder to demos/<product-slug>/ and edit.
+  Rules for every demo:
+    - Keep the demo banner exactly as written.
+    - Synthetic sample data only. No API keys, tokens or secrets in this folder.
+    - Any LLM output must be pre-recorded into a JSON file next to this page.
+    - 5-7 steps: problem -> input -> result -> what it means.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PRODUCT NAME – demo</title>
+  <meta name="description" content="One-sentence description of the demo.">
+  <link rel="stylesheet" href="../../assets/css/site.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to demo</a>
+  <div class="demo-banner" role="note">Demo with sample data, not legal advice.</div>
+
+  <header class="site-header wrap">
+    <a class="crumb" href="../../">← All demos</a>
+    <h1>PRODUCT NAME</h1>
+    <p class="muted">One line on who this is for and what it does.</p>
+  </header>
+
+  <main id="main" class="wrap">
+    <div class="stepper" id="demo">
+
+      <section class="step" data-title="The problem">
+        <h2>The compliance problem</h2>
+        <p>Describe the obligation or risk the user faces, in plain words.</p>
+      </section>
+
+      <section class="step" data-title="Your input">
+        <h2>Choose an example</h2>
+        <fieldset class="choices" id="choices">
+          <legend>Pick one sample case</legend>
+          <!-- filled by script below -->
+        </fieldset>
+      </section>
+
+      <section class="step" data-title="Result">
+        <h2>What the product returns</h2>
+        <div id="result"></div>
+      </section>
+
+      <section class="step" data-title="Detail">
+        <h2>A closer look</h2>
+        <div id="detail"></div>
+      </section>
+
+      <section class="step" data-title="What it means">
+        <h2>What this means for you</h2>
+        <div id="meaning"></div>
+        <div class="callout warn">
+          <strong>Limits of this demo.</strong> State what the sample data does not cover.
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="site-footer wrap">
+    <p>Source code: <a href="https://github.com/OWNER/REPO">OWNER/REPO</a>. Sample data only; not legal advice.</p>
+  </footer>
+
+  <script src="../../assets/js/stepper.js"></script>
+  <script>
+    // Sample data can live inline (as here) or in data.json loaded with fetch('data.json').
+    const SAMPLES = [
+      { id: 'a', title: 'Sample case A', sub: 'Short description', result: 'Pre-recorded result for A.' },
+      { id: 'b', title: 'Sample case B', sub: 'Short description', result: 'Pre-recorded result for B.' },
+    ];
+
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+    document.getElementById('choices').insertAdjacentHTML('beforeend', SAMPLES.map((s) => `
+      <label class="choice"><input type="radio" name="sample" value="${s.id}">
+        <span><span class="choice-title">${esc(s.title)}</span><br><span class="choice-sub">${esc(s.sub)}</span></span>
+      </label>`).join(''));
+
+    const stepper = Stepper.init('#demo', {
+      canLeave: {
+        2: (el, state) => {
+          const v = el.querySelector('input[name=sample]:checked');
+          state.sample = v && SAMPLES.find((s) => s.id === v.value);
+          return state.sample ? true : 'Pick a sample case to continue.';
+        },
+      },
+      onEnter: {
+        3: (el, state) => { el.querySelector('#result').innerHTML = `<p>${esc(state.sample.result)}</p>`; },
+        4: (el, state) => { el.querySelector('#detail').innerHTML = `<p>Detail for ${esc(state.sample.title)}.</p>`; },
+        5: (el, state) => { el.querySelector('#meaning').innerHTML = `<p>Takeaway for ${esc(state.sample.title)}.</p>`; },
+      },
+    });
+  </script>
+</body>
+</html>

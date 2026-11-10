@@ -1,0 +1,41 @@
+name: pages
+# Publishes only the static demo site in site/ to GitHub Pages.
+# Nothing else in the repo (docs/, app code, data) is deployed.
+on:
+  push:
+    branches: [main]
+    paths: ["site/**", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refuse to publish anything that looks like a secret
+        run: |
+          if grep -RInE '(sk-[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{30,}|api[_-]?key\s*[:=]|BEGIN [A-Z ]*PRIVATE KEY)' site/; then
+            echo "Possible secret found in site/. Remove it before publishing."; exit 1
+          fi
+      - name: Check every demo page shows the banner
+        run: |
+          for f in $(find site/demos -name index.html); do
+            grep -q 'Demo with sample data, not legal advice.' "$f" || { echo "Missing banner: $f"; exit 1; }
+          done
+      - name: Leave the template and site README out of the published site
+        run: rm -rf site/demos/_template site/README.md
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Act Website Checklist – demo</title>
+  <meta name="description" content="A six-step walkthrough of the EU AI Act website checklist for small businesses, with a fictional bakery and illustrative questions.">
+  <link rel="stylesheet" href="../../assets/css/site.css">
+  <style>
+    .item-block { border: 1px solid var(--border); border-radius: 8px; padding: .9rem; margin: 1rem 0; }
+    .item-block h3 { font-size: 1.1rem; }
+    .q { border: 0; padding: 0; margin: .9rem 0 0; }
+    .q legend { font-weight: 600; padding: 0; margin-bottom: .4rem; }
+    .yn { display: flex; flex-wrap: wrap; gap: 8px; }
+    .yn label { display: inline-flex; align-items: center; gap: .45rem; min-height: 44px; padding: 0 .9rem; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; }
+    .yn label:has(input:checked) { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+    .yn input { width: 1.05rem; height: 1.05rem; accent-color: var(--accent); margin: 0; }
+    .flag { margin-top: .9rem; font-weight: 600; }
+    .guidance { margin-top: .5rem; }
+    .sample-row { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; margin: .5rem 0 1rem; }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to demo</a>
+  <div class="demo-banner" role="note">Demo with sample data, not legal advice.</div>
+
+  <header class="site-header wrap">
+    <a class="crumb" href="../../">← All demos</a>
+    <h1>EU AI Act Website Checklist</h1>
+    <p class="muted">For small business owners whose website has AI-generated content. This walkthrough uses a fictional bakery; nothing you answer leaves your browser.</p>
+  </header>
+
+  <main id="main" class="wrap">
+    <div class="stepper" id="demo">
+
+      <!-- 1 -->
+      <section class="step" data-title="The problem">
+        <h2>The compliance problem</h2>
+        <p>More and more small businesses use AI to write blog posts, make product images or answer customers in a chat window. Article 50 of the EU AI Act sets <strong>transparency rules</strong> for some of this: people should know when they are talking to an AI, and some AI-generated content has to be disclosed.</p>
+        <p>Most owners aren't lawyers and don't have time to read the regulation. They want a straight answer to one question: <em>is there anything on my website I need to look at?</em></p>
+        <div class="callout">The checklist asks a few short factual questions per item, then <strong>flags</strong> each item as Compliant, Not compliant or Needs-check. It's a self-assessment, not a legal determination.</div>
+      </section>
+
+      <!-- 2 -->
+      <section class="step" data-title="First question">
+        <h2>First, a quick check</h2>
+        <p>Imagine you run <strong>Lindenhof Bakery</strong>, a fictional shop with a website. Answer for the bakery, or load its sample answers for every step.</p>
+        <div class="sample-row">
+          <button type="button" class="btn" id="fill-sample">Use the bakery's sample answers</button>
+          <span class="muted" id="fill-note" aria-live="polite"></span>
+        </div>
+        <fieldset class="q" id="qualifying">
+          <legend></legend>
+          <div class="yn"></div>
+        </fieldset>
+        <div id="qual-note"></div>
+      </section>
+
+      <!-- 3 -->
+      <section class="step" data-title="Text and images">
+        <h2>Items 1 and 2: text and images</h2>
+        <p class="muted">Answer every question. Each item's flag appears as soon as it has enough answers.</p>
+        <div data-items="text,images"></div>
+      </section>
+
+      <!-- 4 -->
+      <section class="step" data-title="Chat and media">
+        <h2>Items 3 and 4: chat, audio and video</h2>
+        <div data-items="chat,media"></div>
+      </section>
+
+      <!-- 5 -->
+      <section class="step" data-title="Your results">
+        <h2>Your results</h2>
+        <div id="summary"></div>
+      </section>
+
+      <!-- 6 -->
+      <section class="step" data-title="What it means">
+        <h2>What this means for you</h2>
+        <div id="meaning"></div>
+        <div class="callout warn">
+          <strong>Limits of this demo and the product.</strong>
+          <ul style="margin:.4rem 0 0; padding-left:1.2rem">
+            <li>The questions and rules on this page were written for the demo. The product's final wording is still going through a legal check.</li>
+            <li>A flag is a self-assessment based on your answers. It isn't legal advice or a certification, and it doesn't estimate any fine.</li>
+            <li>The checklist covers only Article 50's transparency rules for website content, not the rest of the AI Act.</li>
+          </ul>
+        </div>
+        <p>The checklist itself is in development. Sign up to hear when it's ready at <a href="https://compliance.gro-better.com/">compliance.gro-better.com</a>.</p>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="site-footer wrap">
+    <p>Source code: <a href="https://github.com/sneha-beepbeep/sme-compliance-checklist">sneha-beepbeep/sme-compliance-checklist</a>. Fictional business and illustrative questions only; not legal advice.</p>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="../../assets/js/stepper.js"></script>
+  <script>
+  (function () {
+    const D = window.DEMO_DATA;
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const ANS = [['yes', 'Yes'], ['no', 'No'], ['not_sure', 'Not sure']];
+    const LABEL = { compliant: 'Compliant', not_compliant: 'Not compliant', needs_check: 'Needs-check' };
+    const TAG = { compliant: 'ok', not_compliant: 'bad', needs_check: 'warn' };
+    const answers = {};          // answers[itemId][questionId]
+    let qualifying = null;
+
+    const radios = (name) => `<div class="yn">${ANS.map(([v, l]) =>
+      `<label><input type="radio" name="${name}" value="${v}"> ${l}</label>`).join('')}</div>`;
+
+    // Same order of checks as the product's computeStatus():
+    // any "not sure" -> needs_check; unanswered -> null; compliant combos; not-compliant combos; else needs_check.
+    // Demo addition: a follow-up question is skipped when the first answer is "no".
+    function relevant(item, a) { return item.questions.filter((q, i) => i === 0 || a.q1 !== 'no'); }
+    function computeStatus(item, a) {
+      a = a || {};
+      const qs = relevant(item, a);
+      if (qs.some((q) => a[q.id] === 'not_sure')) return 'needs_check';
+      if (!qs.every((q) => a[q.id] === 'yes' || a[q.id] === 'no')) return null;
+      const match = (combo) => item.questions.every((q) => combo[q.id] === '*' || combo[q.id] === a[q.id]);
+      if (item.compliantWhen.some(match)) return 'compliant';
+      if (item.notCompliantWhen.some(match)) return 'not_compliant';
+      return 'needs_check';
+    }
+
+    // ---- Step 2 ----
+    const qf = document.getElementById('qualifying');
+    qf.querySelector('legend').textContent = D.qualifying;
+    qf.querySelector('.yn').outerHTML = radios('qualifying');
+    qf.addEventListener('change', (e) => { qualifying = e.target.value; renderQualNote(); });
+    function renderQualNote() {
+      document.getElementById('qual-note').innerHTML = qualifying === 'no'
+        ? '<div class="callout">You likely don’t need this checklist right now. In the product, the walkthrough would stop here. In this demo you can carry on to see the rest.</div>'
+        : qualifying === 'not_sure' ? '<p class="muted" style="margin-top:.8rem">That’s fine: working through the checklist is how you find out.</p>' : '';
+    }
+
+    // ---- Steps 3 and 4: item blocks ----
+    document.querySelectorAll('[data-items]').forEach((host) => {
+      host.innerHTML = host.dataset.items.split(',').map((id) => {
+        const item = D.items.find((x) => x.id === id);
+        const n = D.items.indexOf(item) + 1;
+        return `<div class="item-block" data-item="${id}">
+          <h3>Item ${n} of ${D.items.length}: ${esc(item.title)}</h3>
+          <p>${esc(item.statement)}</p>
+          ${item.questions.map((q) => `<fieldset class="q" data-q="${q.id}"><legend>${esc(q.text)}</legend>${radios(id + '-' + q.id)}</fieldset>`).join('')}
+          <div class="flag" aria-live="polite"></div>
+          <div class="guidance"></div>
+        </div>`;
+      }).join('');
+      host.addEventListener('change', (e) => {
+        const block = e.target.closest('[data-item]');
+        const q = e.target.closest('[data-q]').dataset.q;
+        (answers[block.dataset.item] ||= {})[q] = e.target.value;
+        renderItem(block);
+      });
+    });
+
+    function renderItem(block) {
+      const item = D.items.find((x) => x.id === block.dataset.item);
+      const a = answers[item.id] || {};
+      block.querySelectorAll('[data-q]').forEach((fs, i) => { fs.hidden = i > 0 && a.q1 === 'no'; });
+      const st = computeStatus(item, a);
+      block.querySelector('.flag').innerHTML = st
+        ? `This item is flagged as: <span class="tag ${TAG[st]}">${LABEL[st]}</span>` : '';
+      block.querySelector('.guidance').innerHTML = st && st !== 'compliant'
+        ? `<div class="callout${st === 'not_compliant' ? ' warn' : ''}"><strong>${LABEL[st]}.</strong> Relevant rule: Article 50 of the EU AI Act (Regulation (EU) 2024/1689), transparency obligations. ${st === 'needs_check' ? 'Whether this applies depends on details a short checklist can’t see, so it’s worth a closer look.' : ''}</div>` : '';
+    }
+
+    function itemsAnswered(ids) {
+      const missing = ids.filter((id) => !computeStatus(D.items.find((x) => x.id === id), answers[id]));
+      return missing.length ? 'Answer every question to continue.' : true;
+    }
+
+    // ---- Sample answers ----
+    function setRadio(name, value) {
+      const r = document.querySelector(`input[name="${name}"][value="${value}"]`);
+      if (r) r.checked = true;
+    }
+    document.getElementById('fill-sample').addEventListener('click', () => {
+      qualifying = 'yes'; setRadio('qualifying', 'yes'); renderQualNote();
+      D.items.forEach((item) => {
+        answers[item.id] = { ...item.sample };
+        Object.entries(item.sample).forEach(([q, v]) => setRadio(item.id + '-' + q, v));
+        renderItem(document.querySelector(`[data-item="${item.id}"]`));
+      });
+      document.getElementById('fill-note').textContent = 'Sample answers loaded. Press Next to see them.';
+    });
+
+    // ---- Steps 5 and 6 ----
+    function results() { return D.items.map((item) => ({ item, st: computeStatus(item, answers[item.id]) })); }
+
+    function renderSummary() {
+      const r = results();
+      const flagged = r.filter((x) => x.st !== 'compliant');
+      document.getElementById('summary').innerHTML = `
+        <ul class="items">${r.map(({ item, st }) => `<li class="item"><h3>${esc(item.title)}</h3>
+          <span class="tag ${TAG[st]}">${LABEL[st]}</span></li>`).join('')}</ul>
+        ${flagged.length
+          ? `<p>${flagged.length} of ${r.length} items ${flagged.length === 1 ? 'is' : 'are'} flagged for attention.</p>`
+          : '<p>Every item is flagged as Compliant, based on your answers. There’s nothing you need to act on from this checklist.</p>'}`;
+    }
+
+    function renderMeaning() {
+      const r = results();
+      const nc = r.filter((x) => x.st === 'not_compliant'), nk = r.filter((x) => x.st === 'needs_check');
+      const list = (xs) => xs.map((x) => esc(x.item.title)).join(', ');
+      document.getElementById('meaning').innerHTML = `
+        <div class="stat-row">
+          <div class="stat"><span class="n">${r.length - nc.length - nk.length}</span><span class="l">Compliant</span></div>
+          <div class="stat"><span class="n">${nk.length}</span><span class="l">Needs-check</span></div>
+          <div class="stat"><span class="n">${nc.length}</span><span class="l">Not compliant</span></div>
+        </div>
+        <ul style="padding-left:1.2rem">
+          ${nc.length ? `<li><strong>Not compliant</strong> (${list(nc)}): from your answers, something the rule asks for seems to be missing on your site. This is the place to start.</li>` : ''}
+          ${nk.length ? `<li><strong>Needs-check</strong> (${list(nk)}): the answer depends on details the checklist can’t judge, or you weren’t sure. Worth a closer look before you decide.</li>` : ''}
+          ${!nc.length && !nk.length ? '<li>Nothing is flagged. If your site changes, for example you add a chat assistant, run the checklist again.</li>' : ''}
+        </ul>
+        ${nc.length + nk.length ? `<div class="callout"><strong>Still stuck? Talk to us.</strong> In the product, one short form lists your flagged items and a person from the agency gets back to you. In this demo nothing is sent.</div>` : ''}`;
+    }
+
+    window.demo = Stepper.init('#demo', {
+      canLeave: {
+        2: () => (qualifying ? true : 'Choose an answer to continue.'),
+        3: () => itemsAnswered(['text', 'images']),
+        4: () => itemsAnswered(['chat', 'media']),
+      },
+      onEnter: { 5: renderSummary, 6: renderMeaning },
+    });
+  })();
+  </script>
+</body>
+</html>
